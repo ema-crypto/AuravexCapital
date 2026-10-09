@@ -1,0 +1,55 @@
+<% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
+
+<div class="filter-bar">
+  <% ['all','deposit','withdrawal','earning','referral','debit'].forEach(f => { %>
+  <a href="/admin/transactions?filter=<%= f %>" class="btn <%= filter === f ? 'btn-gold' : 'btn-outline' %> btn-sm">
+    <%= f.charAt(0).toUpperCase() + f.slice(1) %>
+  </a>
+  <% }) %>
+</div>
+
+<div class="a-card">
+  <div class="a-card-header">
+    <div class="a-card-title">Transactions (<%= transactions.length %>)</div>
+  </div>
+  <div class="a-table-wrap">
+    <table class="a-table">
+      <thead>
+        <tr><th>User</th><th>Type</th><th>Amount</th><th>Status</th><th>Ref</th><th>Note</th><th>Date</th><th>Actions</th></tr>
+      </thead>
+      <tbody>
+        <% transactions.forEach(t => { %>
+        <tr>
+          <td style="font-size:.8rem;">
+            <a href="/admin/users/<%= t.user_id %>"><%= t.full_name %></a>
+            <div style="font-size:.72rem;color:var(--text-muted);"><%= t.email %></div>
+          </td>
+          <td><span class="badge <%= t.type === 'deposit' ? 'badge-green' : t.type === 'withdrawal' ? 'badge-gold' : t.type === 'earning' ? 'badge-blue' : 'badge-gray' %>"><%= t.type %></span></td>
+          <td style="font-weight:600;">$<%= Number(t.amount).toFixed(2) %></td>
+          <td><span class="badge <%= t.status === 'completed' ? 'badge-green' : t.status === 'pending' ? 'badge-gold' : 'badge-red' %>"><%= t.status %></span></td>
+          <td style="font-size:.73rem;color:var(--text-muted);"><%= t.txn_ref || '—' %></td>
+          <td style="font-size:.78rem;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= t.note || '—' %></td>
+          <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(t.created_at) %></td>
+          <td>
+            <% if (t.type === 'withdrawal' && t.status === 'pending') { %>
+            <div style="display:flex;gap:5px;">
+              <form method="POST" action="/admin/transactions/<%= t.id %>/approve">
+                <button class="btn btn-sm btn-success">Approve</button>
+              </form>
+              <form method="POST" action="/admin/transactions/<%= t.id %>/reject">
+                <button class="btn btn-sm btn-danger">Reject</button>
+              </form>
+            </div>
+            <% } else { %>
+            <span style="color:var(--text-muted);font-size:.75rem;">—</span>
+            <% } %>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (!transactions.length) { %>
+        <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">No transactions found</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

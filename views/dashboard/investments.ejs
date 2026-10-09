@@ -1,0 +1,71 @@
+<div class="dash-page-title" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;">
+  <div>
+    <h1>My Investments</h1>
+    <p>Monitor your investment portfolio and earnings</p>
+  </div>
+  <a href="/dashboard/plans" class="btn btn-gold">+ New Investment</a>
+</div>
+
+<!-- Summary -->
+<div class="stats-row" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="sc-icon gold">💵</div>
+    <div class="sc-val"><%= helpers.currency(totalInvested) %></div>
+    <div class="sc-lbl">Total Invested</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon emerald">📈</div>
+    <div class="sc-val"><%= activeCount %></div>
+    <div class="sc-lbl">Active Investments</div>
+  </div>
+  <div class="stat-card">
+    <div class="sc-icon blue">💰</div>
+    <div class="sc-val"><%= helpers.currency(totalEarned) %></div>
+    <div class="sc-lbl">Total Earnings</div>
+  </div>
+</div>
+
+<div class="data-card">
+  <div class="data-card-head">
+    <h3>All Investments</h3>
+    <span style="font-size:.8rem;color:var(--text-muted);"><%= investments.length %> record<%= investments.length !== 1 ? 's' : '' %></span>
+  </div>
+  <% if (investments.length === 0) { %>
+  <div class="data-empty">
+    <div class="de-icon">📊</div>
+    No investments yet.<br>
+    <a href="/dashboard/plans" style="color:var(--gold-500);margin-top:8px;display:inline-block;">Browse plans to get started →</a>
+  </div>
+  <% } else { %>
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Plan</th>
+          <th>Amount</th>
+          <th>Daily Rate</th>
+          <th>Term</th>
+          <th>Earnings</th>
+          <th>Status</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% investments.forEach(inv => { %>
+        <tr>
+          <td><strong><%= inv.plan_name %></strong></td>
+          <td style="font-weight:700;"><%= helpers.currency(inv.amount) %></td>
+          <td style="color:var(--gold-500);font-weight:600;"><%= inv.daily_percent %>%</td>
+          <td><%= inv.term_days %> days</td>
+          <td style="color:var(--emerald-500);font-weight:600;"><%= helpers.currency(inv.earned) %></td>
+          <td><span class="badge badge-<%= inv.status %>"><%= inv.status %></span></td>
+          <td style="color:var(--text-muted);font-size:.8rem;"><%= helpers.dateStr(inv.start_date) %></td>
+          <td style="color:var(--text-muted);font-size:.8rem;"><%= helpers.dateStr(inv.end_date) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>

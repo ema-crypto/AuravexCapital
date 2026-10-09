@@ -1,0 +1,241 @@
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-content container">
+    <div class="hero-left">
+      <div class="hero-badge">🛢️ &nbsp; Energy Investment Platform</div>
+      <h1 class="hero-title">
+        Invest in <span class="highlight">Texas Oil</span><br>Fields Today
+      </h1>
+      <p class="hero-desc">
+        Join thousands of investors earning daily returns through our energy sector investment platform. Transparent, secure, and consistently profitable.
+      </p>
+      <div class="hero-btns">
+        <a href="/register" class="btn btn-gold btn-lg">Open an Account</a>
+        <a href="/plans" class="btn btn-outline btn-lg">View Plans</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hs-val">6–16%</div><div class="hs-lbl">Daily Returns</div></div>
+        <div class="hero-stat"><div class="hs-val">4</div><div class="hs-lbl">Investment Plans</div></div>
+        <div class="hero-stat"><div class="hs-val">5%</div><div class="hs-lbl">Referral Bonus</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card hero-card-gold">
+        <div class="hc-row">
+          <div>
+            <div class="hc-label">Active Investment</div>
+            <div class="hc-value" style="color:var(--gold-400);">$12,450.00</div>
+          </div>
+          <div style="font-size:2rem;">📈</div>
+        </div>
+        <div class="hc-sub">+8% Daily · 7-day term</div>
+      </div>
+      <div class="hero-card">
+        <div class="hc-label" style="margin-bottom:12px;">Investment Plans</div>
+        <% plans.forEach(p => { %>
+        <div class="plan-mini">
+          <span class="pm-name"><%= p.name %></span>
+          <span class="pm-rate"><%= p.daily_percent %>% / day</span>
+        </div>
+        <% }) %>
+      </div>
+      <div class="hero-card" style="display:flex;gap:24px;">
+        <div>
+          <div class="hc-label">Today's Payout</div>
+          <div class="hc-value" style="font-size:1.2rem;color:#fff;">$996.00</div>
+        </div>
+        <div>
+          <div class="hc-label">Term</div>
+          <div class="hc-value" style="font-size:1.2rem;color:#fff;">7 Days</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLANS PREVIEW -->
+<section style="background:var(--surface-2);padding:80px 0;">
+  <div class="container">
+    <div class="section-title">
+      <span class="section-badge">Investment Plans</span>
+      <h2>Choose Your Plan</h2>
+      <p>A number of investment plans developed to satisfy the needs of both small and large investors.</p>
+    </div>
+    <div class="plans-grid">
+      <% plans.forEach((p, i) => { %>
+      <div class="plan-card <%= i === 2 ? 'featured' : '' %>">
+        <% if (i === 2) { %><div class="featured-tag">Popular</div><% } %>
+        <div class="plan-card-head">
+          <div class="plan-label"><%= p.label %></div>
+          <div class="plan-rate"><%= p.daily_percent %><span class="plan-rate-unit">%</span></div>
+          <div class="plan-term">Daily · <%= p.term_days %>-day term</div>
+        </div>
+        <div class="plan-card-body">
+          <div class="plan-row">
+            <span class="pr-key">Minimum</span>
+            <span class="pr-val">$<%= p.min_amount.toLocaleString() %></span>
+          </div>
+          <div class="plan-row">
+            <span class="pr-key">Maximum</span>
+            <span class="pr-val"><%= p.max_amount ? '$' + p.max_amount.toLocaleString() : 'Unlimited' %></span>
+          </div>
+          <div class="plan-row">
+            <span class="pr-key">Principal</span>
+            <span class="pr-val" style="color:var(--emerald-500);"><%= p.deposit_returned ? 'Returned' : 'Included' %></span>
+          </div>
+          <div class="plan-row">
+            <span class="pr-key">Payouts</span>
+            <span class="pr-val">Instant</span>
+          </div>
+        </div>
+        <div class="plan-card-foot">
+          <a href="/register" class="btn btn-gold btn-block">Invest Now</a>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section style="background:var(--surface);padding:80px 0;">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-img-wrap">
+        <div class="about-img-overlay"></div>
+        <div class="about-img-icon">🛢️</div>
+      </div>
+      <div>
+        <span class="section-badge">About Us</span>
+        <h2 style="margin:12px 0 16px;">Modern Energy Investment Organization</h2>
+        <p style="margin-bottom:16px;">We invite you to start investing in the extraction and development of Texas oil fields. Every quarter we show improving performance and are ready for new investment infusions that will help us develop even faster.</p>
+        <p style="margin-bottom:24px;">Our main advantage lies in our recruited team of experts — experienced engineers, geologists, technicians, and scientists who are actively developing new fields across the USA.</p>
+        <div class="about-checks">
+          <div class="about-check"><div class="check-icon">✓</div><span>Experienced team of energy specialists</span></div>
+          <div class="about-check"><div class="check-icon">✓</div><span>AI-powered field detection technology</span></div>
+          <div class="about-check"><div class="check-icon">✓</div><span>Instant payouts, no delays</span></div>
+          <div class="about-check"><div class="check-icon">✓</div><span>Three-level referral program</span></div>
+        </div>
+        <a href="/about" class="btn btn-gold" style="margin-top:24px;">Learn More</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-bg" style="padding:80px 0;">
+  <div class="container">
+    <div class="section-title">
+      <span class="section-badge" style="background:rgba(201,162,39,.12);color:var(--gold-400);">Why Choose Us</span>
+      <h2 style="color:#fff;">Platform Features</h2>
+      <p>We have done everything for the stable operation and safety of our investors.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-icon">🔒</div>
+        <h4>Secure Hosting</h4>
+        <p>Hosted on reliable servers providing protection from both external and internal threats.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🛡️</div>
+        <h4>SSL Certificate</h4>
+        <p>All data exchange is completely secure with bank-grade encryption certificates.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <h4>Instant Payouts</h4>
+        <p>Withdrawals are processed instantly. Funds credited to your wallet without delay.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🤝</div>
+        <h4>Referral Program</h4>
+        <p>Earn 5% commission across three referral levels by inviting friends to invest.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">📊</div>
+        <h4>Live Dashboard</h4>
+        <p>Track all your investments, earnings, and transaction history in real time.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-icon">🌍</div>
+        <h4>Global Access</h4>
+        <p>Invest from anywhere in the world using leading cryptocurrencies.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERRAL PROGRAM -->
+<section style="background:var(--surface-2);padding:80px 0;">
+  <div class="container">
+    <div class="referral-banner">
+      <div>
+        <span class="section-badge" style="background:rgba(201,162,39,.12);color:var(--gold-400);">Earn More</span>
+        <h2 style="color:#fff;margin:12px 0 14px;">Three-Level Referral Program</h2>
+        <p style="color:var(--text-secondary);max-width:460px;margin-bottom:28px;">By attracting new investors, our members receive an additional source of income. Earn commissions across three levels of referrals.</p>
+        <a href="/register" class="btn btn-gold">Join & Start Earning</a>
+      </div>
+      <div class="ref-levels">
+        <div class="ref-level-card">
+          <div class="rl-num">Level 1</div>
+          <div class="rl-pct">5%</div>
+        </div>
+        <div class="ref-level-card">
+          <div class="rl-num">Level 2</div>
+          <div class="rl-pct">5%</div>
+        </div>
+        <div class="ref-level-card">
+          <div class="rl-num">Level 3</div>
+          <div class="rl-pct">5%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACCEPTED PAYMENTS -->
+<section style="background:var(--surface);padding:64px 0;">
+  <div class="container">
+    <div class="section-title">
+      <h3 style="color:var(--text-dark);">Accepted Cryptocurrencies</h3>
+      <p>We have integrated the most popular payment networks for your convenience.</p>
+    </div>
+    <% const cdnBase = 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/'; %>
+    <% const coins = [
+      { slug:'btc',  name:'Bitcoin',  sym:'BTC'  },
+      { slug:'eth',  name:'Ethereum', sym:'ETH'  },
+      { slug:'usdt', name:'Tether',   sym:'USDT' },
+      { slug:'ltc',  name:'Litecoin', sym:'LTC'  },
+      { slug:'doge', name:'Dogecoin', sym:'DOGE' },
+      { slug:'trx',  name:'Tron',     sym:'TRX'  },
+      { slug:'xrp',  name:'Ripple',   sym:'XRP'  },
+      { slug:'dash', name:'Dash',     sym:'DASH' }
+    ]; %>
+    <div class="coins-grid">
+      <% coins.forEach(c => { %>
+      <div class="coin-item">
+        <div class="coin-avatar">
+          <img src="<%= cdnBase %><%= c.slug %>.svg" alt="<%= c.sym %>">
+        </div>
+        <div>
+          <div class="coin-name"><%= c.name %></div>
+          <div class="coin-sym"><%= c.sym %></div>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="background:linear-gradient(135deg,var(--navy-950),#1a2040);padding:72px 0;text-align:center;">
+  <div class="container">
+    <h2 style="color:#fff;font-size:2.25rem;margin-bottom:14px;">Ready to Start Investing?</h2>
+    <p style="color:var(--text-secondary);margin-bottom:32px;font-size:1.05rem;">Join our platform today and start earning daily returns on your investment.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="/register" class="btn btn-gold btn-lg">Create Free Account</a>
+      <a href="/plans" class="btn btn-outline btn-lg">See All Plans</a>
+    </div>
+  </div>
+</section>

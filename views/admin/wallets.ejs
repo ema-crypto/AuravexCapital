@@ -1,0 +1,39 @@
+<% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
+
+<p style="color:var(--text-muted);font-size:.875rem;margin-bottom:20px;">
+  Update the deposit wallet addresses shown to users on the Deposit page. Changes take effect immediately.
+</p>
+
+<div style="display:grid;gap:16px;">
+  <% wallets.forEach(w => { %>
+  <div class="a-card">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="width:36px;height:36px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:var(--gold);"><%= w.symbol %></div>
+      <div>
+        <div style="font-weight:600;"><%= w.label %></div>
+        <div style="font-size:.75rem;color:var(--text-muted);">Network: <%= w.network %></div>
+      </div>
+      <div style="margin-left:auto;">
+        <span class="badge <%= w.is_active ? 'badge-green' : 'badge-gray' %>"><%= w.is_active ? 'Active' : 'Disabled' %></span>
+      </div>
+    </div>
+    <form method="POST" action="/admin/wallets/<%= w.id %>">
+      <div style="display:flex;gap:12px;align-items:flex-end;">
+        <div style="flex:1;">
+          <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:5px;">Wallet Address</label>
+          <input type="text" name="address" value="<%= w.address %>" required
+            style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;font-family:monospace;">
+        </div>
+        <div>
+          <label style="font-size:.75rem;color:var(--text-muted);display:block;margin-bottom:5px;">Active</label>
+          <select name="is_active" style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;">
+            <option value="1" <%= w.is_active ? 'selected' : '' %>>Yes</option>
+            <option value=""  <%= !w.is_active ? 'selected' : '' %>>No</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-gold" style="white-space:nowrap;">Save</button>
+      </div>
+    </form>
+  </div>
+  <% }) %>
+</div>

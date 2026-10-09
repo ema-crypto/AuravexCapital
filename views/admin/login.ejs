@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login | AuravexCapital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --bg: #0d1117; --bg2: #161b22; --bg3: #21262d; --border: #30363d; --text: #e6edf3; --text-muted: #8b949e; --gold: #c9a227; --danger: #f85149; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .login-box { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 40px; width: 100%; max-width: 400px; }
+    .login-logo { text-align: center; margin-bottom: 28px; }
+    .login-logo h1 { font-size: 1.5rem; font-weight: 800; color: var(--gold); }
+    .login-logo p { color: var(--text-muted); font-size: .85rem; margin-top: 4px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: .8rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: .9rem; font-family: inherit; }
+    .form-group input:focus { outline: none; border-color: var(--gold); }
+    .btn-login { width: 100%; padding: 12px; background: var(--gold); border: none; border-radius: 8px; color: #000; font-size: .95rem; font-weight: 700; cursor: pointer; }
+    .alert-error { background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.3); color: var(--danger); padding: 10px 14px; border-radius: 8px; font-size: .85rem; margin-bottom: 18px; }
+  </style>
+</head>
+<body>
+  <div class="login-box">
+    <div class="login-logo">
+      <h1>AC Admin</h1>
+      <p>AuravexCapital Control Panel</p>
+    </div>
+    <% if (errors && errors.length) { %>
+      <div class="alert-error"><%= errors[0] %></div>
+    <% } %>
+    <form method="POST" action="/admin/login">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" required autofocus placeholder="admin@auravexcapital.ltd">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="btn-login">Sign In to Admin</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<div class="auth-wrapper">
+  <div class="auth-side">
+    <div class="auth-side-content">
+      <div class="auth-side-icon">📈</div>
+      <h2>Start Investing Today</h2>
+      <p>Join AuravexCapital and earn consistent daily returns from energy sector investments.</p>
+      <div class="auth-side-features">
+        <div class="asf-item"><div class="asf-check">✓</div><span class="asf-text">Free account — no setup fees</span></div>
+        <div class="asf-item"><div class="asf-check">✓</div><span class="asf-text">4 plans from $50 to unlimited</span></div>
+        <div class="asf-item"><div class="asf-check">✓</div><span class="asf-text">Earn 5% referral commissions</span></div>
+        <div class="asf-item"><div class="asf-check">✓</div><span class="asf-text">Instant crypto withdrawals</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-main">
+    <div class="auth-form-wrap">
+      <div class="auth-logo-mobile">
+        <div style="display:inline-flex;align-items:center;gap:10px;">
+          <div class="logo-icon" style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#c9a227,#f0cc6a);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0a0e1a;">AC</div>
+          <span style="font-weight:700;font-size:1.15rem;">Auravex<span style="color:#c9a227;">Capital</span></span>
+        </div>
+      </div>
+
+      <h1>Create Account</h1>
+      <p class="subtitle">Fill in your details to get started</p>
+
+      <% if (locals.errors && errors.length) { %>
+      <div class="alert alert-error">⚠️ <%= errors[0] %></div>
+      <% } %>
+
+      <form action="/register" method="POST">
+        <% if (ref) { %><input type="hidden" name="ref" value="<%= ref %>"><% } %>
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" name="full_name" class="form-control" placeholder="John Doe" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country</label>
+          <select name="country" class="form-control">
+            <option value="Nigeria">Nigeria</option>
+            <option value="United States">United States</option>
+            <option value="United Kingdom">United Kingdom</option>
+            <option value="Ghana">Ghana</option>
+            <option value="Kenya">Kenya</option>
+            <option value="South Africa">South Africa</option>
+            <option value="Canada">Canada</option>
+            <option value="Australia">Australia</option>
+            <option value="India">India</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" name="password" class="form-control" placeholder="Min 8 characters" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" name="password_confirm" class="form-control" placeholder="Repeat password" required>
+            </div>
+          </div>
+        </div>
+        <% if (ref) { %>
+        <div class="alert alert-info" style="margin-bottom:16px;">🎁 You were referred! You'll be linked to your referrer after registration.</div>
+        <% } %>
+        <button type="submit" class="btn btn-gold btn-block btn-lg">Create My Account</button>
+        <p style="font-size:.75rem;color:var(--text-muted);margin-top:12px;text-align:center;">By registering you agree to our terms and conditions.</p>
+      </form>
+
+      <p class="auth-footer-link">Already have an account? <a href="/login">Sign in</a></p>
+    </div>
+  </div>
+</div>

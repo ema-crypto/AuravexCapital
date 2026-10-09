@@ -1,0 +1,141 @@
+<% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
+<% if (errors && errors.length) { %><div class="a-alert a-alert-error"><%= errors[0] %></div><% } %>
+
+<div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
+  <a href="/admin/users" class="btn btn-outline btn-sm">← Back to Users</a>
+  <form method="POST" action="/admin/users/<%= user.id %>/suspend">
+    <button type="submit" class="btn btn-sm <%= user.is_suspended ? 'btn-success' : 'btn-outline' %>">
+      <%= user.is_suspended ? 'Unsuspend Account' : 'Suspend Account' %>
+    </button>
+  </form>
+  <form method="POST" action="/admin/users/<%= user.id %>/delete" onsubmit="return confirm('Permanently delete this user? All data will be lost.')">
+    <button type="submit" class="btn btn-danger btn-sm">Delete User</button>
+  </form>
+</div>
+
+<div style="display:grid;grid-template-columns:320px 1fr;gap:20px;margin-bottom:20px;">
+  <!-- User card -->
+  <div class="a-card">
+    <div class="a-card-title" style="margin-bottom:16px;">User Profile</div>
+    <div style="margin-bottom:10px;"><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Full Name</div><strong><%= user.full_name %></strong></div>
+    <div style="margin-bottom:10px;"><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Email</div><%= user.email %></div>
+    <div style="margin-bottom:10px;"><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Country</div><%= user.country %></div>
+    <div style="margin-bottom:10px;"><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Referral Code</div><code style="font-size:.85rem;"><%= user.referral_code %></code></div>
+    <div style="margin-bottom:10px;"><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Joined</div><%= helpers.dateStr(user.created_at) %></div>
+    <div style="margin-bottom:16px;"><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Status</div>
+      <span class="badge <%= user.is_suspended ? 'badge-red' : 'badge-green' %>"><%= user.is_suspended ? 'Suspended' : 'Active' %></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--gold);">$<%= Number(user.balance).toFixed(2) %></div>
+        <div style="font-size:.7rem;color:var(--text-muted);">Balance</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--success);">$<%= Number(user.referral_balance).toFixed(2) %></div>
+        <div style="font-size:.7rem;color:var(--text-muted);">Referral Bal.</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem;font-weight:600;">$<%= Number(user.total_deposited).toFixed(2) %></div>
+        <div style="font-size:.7rem;color:var(--text-muted);">Deposited</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:1.1rem;font-weight:600;">$<%= Number(user.total_withdrawn).toFixed(2) %></div>
+        <div style="font-size:.7rem;color:var(--text-muted);">Withdrawn</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Adjust balance -->
+  <div class="a-card">
+    <div class="a-card-title" style="margin-bottom:16px;">Adjust Balance</div>
+    <form method="POST" action="/admin/users/<%= user.id %>/adjust-balance">
+      <div class="a-form-row">
+        <div class="a-form-group">
+          <label>Amount (USD)</label>
+          <input type="number" name="amount" min="0.01" step="0.01" required placeholder="e.g. 100.00">
+        </div>
+        <div class="a-form-group">
+          <label>Type</label>
+          <select name="type">
+            <option value="credit">Credit (Add funds)</option>
+            <option value="debit">Debit (Remove funds)</option>
+          </select>
+        </div>
+      </div>
+      <div class="a-form-group">
+        <label>Note (optional)</label>
+        <input type="text" name="note" placeholder="Reason for adjustment">
+      </div>
+      <button type="submit" class="btn btn-gold">Apply Adjustment</button>
+    </form>
+  </div>
+</div>
+
+<!-- Investments -->
+<div class="a-card" style="margin-bottom:20px;">
+  <div class="a-card-header"><div class="a-card-title">Investments (<%= investments.length %>)</div></div>
+  <div class="a-table-wrap">
+    <table class="a-table">
+      <thead><tr><th>Plan</th><th>Amount</th><th>Daily %</th><th>Term</th><th>Earned</th><th>Status</th><th>Start</th></tr></thead>
+      <tbody>
+        <% investments.forEach(inv => { %>
+        <tr>
+          <td><%= inv.plan_name %></td>
+          <td style="font-weight:600;">$<%= Number(inv.amount).toFixed(2) %></td>
+          <td><%= inv.daily_percent %>%</td>
+          <td><%= inv.term_days %> days</td>
+          <td style="color:var(--success);">$<%= Number(inv.earned).toFixed(2) %></td>
+          <td><span class="badge <%= inv.status === 'active' ? 'badge-green' : 'badge-gray' %>"><%= inv.status %></span></td>
+          <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(inv.start_date) %></td>
+        </tr>
+        <% }) %>
+        <% if (!investments.length) { %><tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:20px;">No investments</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Transactions -->
+<div class="a-card" style="margin-bottom:20px;">
+  <div class="a-card-header"><div class="a-card-title">Transactions (<%= transactions.length %>)</div></div>
+  <div class="a-table-wrap">
+    <table class="a-table">
+      <thead><tr><th>Type</th><th>Amount</th><th>Status</th><th>Ref</th><th>Note</th><th>Date</th></tr></thead>
+      <tbody>
+        <% transactions.forEach(t => { %>
+        <tr>
+          <td><span class="badge <%= t.type === 'deposit' ? 'badge-green' : t.type === 'withdrawal' ? 'badge-gold' : 'badge-gray' %>"><%= t.type %></span></td>
+          <td style="font-weight:600;">$<%= Number(t.amount).toFixed(2) %></td>
+          <td><span class="badge <%= t.status === 'completed' ? 'badge-green' : t.status === 'pending' ? 'badge-gold' : 'badge-red' %>"><%= t.status %></span></td>
+          <td style="font-size:.75rem;color:var(--text-muted);"><%= t.txn_ref || '—' %></td>
+          <td style="font-size:.8rem;color:var(--text-muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= t.note || '—' %></td>
+          <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(t.created_at) %></td>
+        </tr>
+        <% }) %>
+        <% if (!transactions.length) { %><tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">No transactions</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Referrals -->
+<% if (referrals.length) { %>
+<div class="a-card">
+  <div class="a-card-header"><div class="a-card-title">Referrals (<%= referrals.length %>)</div></div>
+  <div class="a-table-wrap">
+    <table class="a-table">
+      <thead><tr><th>Referred User</th><th>Level</th><th>Commission</th><th>Date</th></tr></thead>
+      <tbody>
+        <% referrals.forEach(r => { %>
+        <tr>
+          <td><%= r.full_name %> <span style="color:var(--text-muted);font-size:.78rem;">(<%= r.email %>)</span></td>
+          <td>L<%= r.level %></td>
+          <td style="color:var(--success);">$<%= Number(r.commission).toFixed(2) %></td>
+          <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(r.created_at) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<% } %>

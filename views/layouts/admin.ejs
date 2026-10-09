@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title + ' | AC Admin' : 'AuravexCapital Admin' %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --gold: #c9a227;
+      --gold-light: #e0b84a;
+      --danger: #f85149;
+      --success: #3fb950;
+      --warning: #d29922;
+      --info: #58a6ff;
+      --radius: 8px;
+      --sidebar-w: 240px;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    a { color: var(--gold); text-decoration: none; }
+    a:hover { color: var(--gold-light); }
+
+    /* Sidebar */
+    .admin-sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0;
+      width: var(--sidebar-w); background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .admin-sidebar-logo {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      font-size: 1.1rem; font-weight: 700; color: var(--gold);
+      letter-spacing: .5px;
+    }
+    .admin-sidebar-logo span { color: var(--text-muted); font-size: .75rem; font-weight: 400; display: block; margin-top: 2px; }
+    .admin-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+    .admin-nav-section { padding: 8px 24px 4px; font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .admin-nav a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 24px; color: var(--text-muted); font-size: .875rem; font-weight: 500;
+      transition: all .15s;
+    }
+    .admin-nav a:hover, .admin-nav a.active { color: var(--text); background: var(--bg3); }
+    .admin-nav a.active { border-right: 3px solid var(--gold); color: var(--gold); }
+    .admin-nav a svg { flex-shrink: 0; }
+    .admin-sidebar-footer { padding: 16px 24px; border-top: 1px solid var(--border); }
+    .admin-sidebar-footer a { color: var(--text-muted); font-size: .8rem; }
+
+    /* Main */
+    .admin-main { margin-left: var(--sidebar-w); min-height: 100vh; display: flex; flex-direction: column; }
+    .admin-topbar {
+      position: sticky; top: 0; background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 14px 28px; display: flex; align-items: center; justify-content: space-between;
+      z-index: 50;
+    }
+    .admin-topbar-title { font-size: 1rem; font-weight: 600; }
+    .admin-topbar-right { display: flex; align-items: center; gap: 16px; font-size: .8rem; color: var(--text-muted); }
+    .admin-content { padding: 28px; flex: 1; }
+
+    /* Cards */
+    .a-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .a-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .a-card-title { font-size: .9rem; font-weight: 600; color: var(--text); }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+    .stat-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-value { font-size: 1.6rem; font-weight: 700; color: var(--text); }
+    .stat-value.gold { color: var(--gold); }
+    .stat-value.green { color: var(--success); }
+    .stat-value.red { color: var(--danger); }
+
+    /* Table */
+    .a-table-wrap { overflow-x: auto; }
+    table.a-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .a-table th { text-align: left; padding: 10px 14px; font-size: .7rem; text-transform: uppercase; letter-spacing: .8px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+    .a-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .a-table tr:last-child td { border-bottom: none; }
+    .a-table tr:hover td { background: var(--bg3); }
+
+    /* Badge */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: .7rem; font-weight: 600; }
+    .badge-green  { background: rgba(63,185,80,.15);  color: var(--success); }
+    .badge-red    { background: rgba(248,81,73,.15);  color: var(--danger); }
+    .badge-gold   { background: rgba(201,162,39,.15); color: var(--gold); }
+    .badge-gray   { background: var(--bg3);            color: var(--text-muted); }
+    .badge-blue   { background: rgba(88,166,255,.15); color: var(--info); }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 6px; font-size: .8rem; font-weight: 500; cursor: pointer; border: none; transition: .15s; text-decoration: none; }
+    .btn-gold  { background: var(--gold); color: #000; }
+    .btn-gold:hover { background: var(--gold-light); color: #000; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #ff6b63; color: #fff; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+    .btn-sm { padding: 4px 10px; font-size: .75rem; }
+    .btn-success { background: var(--success); color: #000; }
+
+    /* Forms */
+    .a-form-group { margin-bottom: 16px; }
+    .a-form-group label { display: block; font-size: .8rem; font-weight: 500; color: var(--text-muted); margin-bottom: 6px; }
+    .a-form-group input, .a-form-group select, .a-form-group textarea {
+      width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: .875rem; font-family: inherit;
+    }
+    .a-form-group input:focus, .a-form-group select:focus, .a-form-group textarea:focus {
+      outline: none; border-color: var(--gold);
+    }
+    .a-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    /* Alert */
+    .a-alert { padding: 12px 16px; border-radius: 6px; font-size: .85rem; margin-bottom: 16px; }
+    .a-alert-success { background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3); color: var(--success); }
+    .a-alert-error   { background: rgba(248,81,73,.1);  border: 1px solid rgba(248,81,73,.3); color: var(--danger); }
+
+    /* Filter bar */
+    .filter-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .filter-bar input[type="text"] {
+      padding: 7px 12px; background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text); font-size: .85rem; min-width: 220px;
+    }
+    .filter-bar input:focus { outline: none; border-color: var(--gold); }
+
+    @media (max-width: 768px) {
+      .admin-sidebar { transform: translateX(-100%); }
+      .admin-main { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <aside class="admin-sidebar">
+    <div class="admin-sidebar-logo">
+      AC Admin
+      <span>AuravexCapital</span>
+    </div>
+    <nav class="admin-nav">
+      <div class="admin-nav-section">Overview</div>
+      <a href="/admin" class="<%= locals.title && locals.title.includes('Dashboard') ? 'active' : '' %>">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <div class="admin-nav-section">Management</div>
+      <a href="/admin/users" class="<%= locals.title && locals.title.toLowerCase().includes('user') ? 'active' : '' %>">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Users
+      </a>
+      <a href="/admin/transactions" class="<%= locals.title && locals.title.toLowerCase().includes('transaction') ? 'active' : '' %>">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Transactions
+      </a>
+      <a href="/admin/wallets" class="<%= locals.title && locals.title.toLowerCase().includes('wallet') ? 'active' : '' %>">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        Deposit Wallets
+      </a>
+      <div class="admin-nav-section">Config</div>
+      <a href="/admin/settings" class="<%= locals.title && locals.title.toLowerCase().includes('setting') ? 'active' : '' %>">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Settings
+      </a>
+    </nav>
+    <div class="admin-sidebar-footer">
+      <a href="/" target="_blank" style="display:block;margin-bottom:8px;">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:4px;vertical-align:middle;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        View Site
+      </a>
+      <a href="/admin/logout">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right:4px;vertical-align:middle;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </a>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div class="admin-topbar-title"><%= typeof title !== 'undefined' ? title : 'Admin' %></div>
+      <div class="admin-topbar-right">
+        <span>Signed in as <strong style="color:var(--gold);"><%= locals.adminUser ? locals.adminUser.full_name : 'Admin' %></strong></span>
+      </div>
+    </div>
+    <div class="admin-content">
+      <%- body %>
+    </div>
+  </main>
+</body>
+</html>

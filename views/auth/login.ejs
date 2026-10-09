@@ -1,0 +1,70 @@
+<div class="auth-wrapper">
+  <div class="auth-side">
+    <div class="auth-side-content">
+      <div class="auth-side-icon">🛢️</div>
+      <h2>Welcome Back</h2>
+      <p>Sign in to access your investment dashboard and track your portfolio.</p>
+      <div class="auth-side-features">
+        <div class="asf-item">
+          <div class="asf-check">✓</div>
+          <span class="asf-text">Real-time investment tracking</span>
+        </div>
+        <div class="asf-item">
+          <div class="asf-check">✓</div>
+          <span class="asf-text">Daily returns up to 16%</span>
+        </div>
+        <div class="asf-item">
+          <div class="asf-check">✓</div>
+          <span class="asf-text">Instant cryptocurrency withdrawals</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-main">
+    <div class="auth-form-wrap">
+      <div class="auth-logo-mobile">
+        <div style="display:inline-flex;align-items:center;gap:10px;">
+          <div class="logo-icon" style="width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#c9a227,#f0cc6a);display:flex;align-items:center;justify-content:center;font-weight:800;color:#0a0e1a;">AC</div>
+          <span style="font-weight:700;font-size:1.15rem;">Auravex<span style="color:#c9a227;">Capital</span></span>
+        </div>
+      </div>
+
+      <h1>Sign In</h1>
+      <p class="subtitle">Enter your credentials to access your account</p>
+
+      <% if (locals.req && locals.req.query.suspended === '1') { %>
+      <div class="alert alert-error">⚠️ Your account has been suspended. Contact support for assistance.</div>
+      <% } %>
+      <% if (locals.errors && errors.length) { %>
+      <div class="alert alert-error">⚠️ <%= errors[0] %></div>
+      <% } %>
+      <% if (locals.success && success.length) { %>
+      <div class="alert alert-success">✅ <%= success[0] %></div>
+      <% } %>
+
+      <form action="/login" method="POST">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">✉️</span>
+            <input type="email" name="email" class="form-control" placeholder="your@email.com" required autocomplete="email">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;justify-content:space-between;">
+            Password <a href="/forgot-password" style="color:var(--gold-500);font-weight:500;font-size:.8rem;">Forgot password?</a>
+          </label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+            <span class="password-toggle">🔒</span>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-gold btn-block btn-lg" style="margin-top:8px;">Sign In to Dashboard</button>
+      </form>
+
+      <p class="auth-footer-link">Don't have an account? <a href="/register">Create one free</a></p>
+    </div>
+  </div>
+</div>

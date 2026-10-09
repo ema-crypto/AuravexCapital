@@ -1,0 +1,154 @@
+<div class="dash-page-title">
+  <h1>Withdraw Funds</h1>
+  <p>Withdraw your wallet balance or referral earnings to your cryptocurrency address</p>
+</div>
+
+<% if (locals.success && success.length) { %><div class="alert alert-success">✅ <%= success[0] %></div><% } %>
+<% if (locals.errors && errors.length) { %><div class="alert alert-error">⚠️ <%= errors[0] %></div><% } %>
+
+<!-- Balance cards -->
+<div class="withdraw-cards">
+  <div class="withdraw-source-card">
+    <div class="ws-icon">💰</div>
+    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px;">Wallet Balance</div>
+    <div class="ws-val"><%= helpers.currency(user.balance) %> <span style="font-size:.9rem;color:var(--text-muted);">USDT</span></div>
+    <div class="ws-sub">Total withdrawn: <%= helpers.currency(user.total_withdrawn) %></div>
+    <% if (wallets.length > 0) { %>
+    <form action="/dashboard/withdraw" method="POST" style="margin-top:16px;">
+      <input type="hidden" name="source" value="wallet">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label" style="font-size:.8rem;">Amount (USDT)</label>
+        <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="1" step="0.01" max="<%= user.balance %>" required>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label" style="font-size:.8rem;">Wallet Address</label>
+        <select name="wallet_id" class="form-control" required>
+          <option value="">Select wallet</option>
+          <% wallets.forEach(w => { %>
+          <option value="<%= w.id %>"><%= w.label %> (<%= w.network %>)</option>
+          <% }) %>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-dark btn-block">Withdraw from Wallet</button>
+    </form>
+    <% } else { %>
+    <div class="alert alert-info" style="margin-top:12px;font-size:.82rem;">Add a wallet address below to make withdrawals.</div>
+    <% } %>
+  </div>
+
+  <div class="withdraw-source-card" style="border-color:#f3e8ff;">
+    <div class="ws-icon">🎁</div>
+    <div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px;">Referral Earnings</div>
+    <div class="ws-val"><%= helpers.currency(user.referral_balance) %> <span style="font-size:.9rem;color:var(--text-muted);">USDT</span></div>
+    <div class="ws-sub">Direct referrals: <%= totalReferrals %></div>
+    <% if (wallets.length > 0) { %>
+    <form action="/dashboard/withdraw" method="POST" style="margin-top:16px;">
+      <input type="hidden" name="source" value="referral">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label" style="font-size:.8rem;">Amount (USDT)</label>
+        <input type="number" name="amount" class="form-control" placeholder="Enter amount" min="1" step="0.01" max="<%= user.referral_balance %>" required>
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label" style="font-size:.8rem;">Wallet Address</label>
+        <select name="wallet_id" class="form-control" required>
+          <option value="">Select wallet</option>
+          <% wallets.forEach(w => { %>
+          <option value="<%= w.id %>"><%= w.label %> (<%= w.network %>)</option>
+          <% }) %>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-dark btn-block">Withdraw Referral Earnings</button>
+    </form>
+    <% } %>
+  </div>
+</div>
+
+<!-- Wallet Addresses -->
+<div class="data-card" style="margin-bottom:20px;">
+  <div class="data-card-head">
+    <h3>My Wallet Addresses</h3>
+    <button onclick="document.getElementById('add-wallet-form').style.display=document.getElementById('add-wallet-form').style.display==='none'?'block':'none'" class="btn btn-gold btn-sm">+ Add Wallet</button>
+  </div>
+
+  <div id="add-wallet-form" style="display:none;padding:20px;border-bottom:1px solid var(--border);background:var(--surface-2);">
+    <form action="/dashboard/wallet/add" method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Wallet Label</label>
+          <input type="text" name="label" class="form-control" placeholder="e.g. My USDT Wallet" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Network</label>
+          <select name="network" class="form-control" required>
+            <option value="BTC">Bitcoin (BTC)</option>
+            <option value="ETH">Ethereum (ETH)</option>
+            <option value="USDT-TRC20" selected>Tether USDT (TRC20)</option>
+            <option value="USDT-ERC20">Tether USDT (ERC20)</option>
+            <option value="LTC">Litecoin (LTC)</option>
+            <option value="DOGE">Dogecoin (DOGE)</option>
+            <option value="TRX">Tron (TRX)</option>
+            <option value="XRP">Ripple (XRP)</option>
+            <option value="DASH">Dash</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wallet Address</label>
+        <input type="text" name="address" class="form-control" placeholder="Paste your wallet address here" required>
+      </div>
+      <button type="submit" class="btn btn-dark">Save Wallet Address</button>
+    </form>
+  </div>
+
+  <% if (wallets.length === 0) { %>
+  <div class="data-empty">
+    <div class="de-icon">👛</div>
+    No wallet addresses saved yet.<br>
+    <span style="color:var(--gold-500);cursor:pointer;" onclick="document.getElementById('add-wallet-form').style.display='block'">Click "Add Wallet" to add your first address →</span>
+  </div>
+  <% } else { %>
+  <table class="data-table">
+    <thead><tr><th>Label</th><th>Network</th><th>Address</th><th>Added</th></tr></thead>
+    <tbody>
+      <% wallets.forEach(w => { %>
+      <tr>
+        <td style="font-weight:600;"><%= w.label %></td>
+        <td><span class="badge badge-active"><%= w.network %></span></td>
+        <td style="font-family:monospace;font-size:.78rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;"><%= w.address %></td>
+        <td style="color:var(--text-muted);font-size:.8rem;"><%= helpers.dateStr(w.created_at) %></td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+  <% } %>
+</div>
+
+<!-- Recent Withdrawals -->
+<div class="data-card">
+  <div class="data-card-head">
+    <h3>Recent Withdrawals</h3>
+  </div>
+  <% if (withdrawals.length === 0) { %>
+  <div class="data-empty">
+    <div class="de-icon">💸</div>
+    No withdrawal history found
+  </div>
+  <% } else { %>
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead><tr><th>Amount</th><th>Wallet</th><th>Status</th><th>Reference</th><th>Date</th></tr></thead>
+      <tbody>
+        <% withdrawals.forEach(w => { %>
+        <tr>
+          <td style="font-weight:700;color:var(--rose-500);">-<%= helpers.currency(w.amount) %></td>
+          <td style="font-family:monospace;font-size:.78rem;max-width:150px;overflow:hidden;text-overflow:ellipsis;"><%= w.wallet_address || '—' %></td>
+          <td><span class="badge badge-<%= w.status %>"><%= w.status %></span></td>
+          <td style="font-size:.75rem;color:var(--text-muted);font-family:monospace;"><%= w.txn_ref || '—' %></td>
+          <td style="color:var(--text-muted);font-size:.8rem;"><%= helpers.dateStr(w.created_at) %></td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>

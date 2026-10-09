@@ -1,0 +1,66 @@
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span class="breadcrumb-sep">/</span><span>Investment Plans</span></div>
+    <h1>Investment Plans</h1>
+    <p>Choose the plan that fits your investment goals</p>
+  </div>
+</div>
+
+<section style="background:var(--surface-2);padding:72px 0;">
+  <div class="container">
+    <div class="section-title">
+      <p>Plans designed to satisfy the needs of both small and large investors. All payouts are processed instantly.</p>
+    </div>
+    <div class="plans-grid">
+      <% plans.forEach((p, i) => { %>
+      <div class="plan-card <%= i === 2 ? 'featured' : '' %>">
+        <% if (i === 2) { %><div class="featured-tag">Popular</div><% } %>
+        <div class="plan-card-head">
+          <div class="plan-label"><%= p.label %></div>
+          <div class="plan-rate"><%= p.daily_percent %><span class="plan-rate-unit">%</span></div>
+          <div class="plan-term">Daily · <%= p.term_days %>-day term</div>
+        </div>
+        <div class="plan-card-body">
+          <div class="plan-row"><span class="pr-key">Min Deposit</span><span class="pr-val">$<%= p.min_amount.toLocaleString() %></span></div>
+          <div class="plan-row"><span class="pr-key">Max Deposit</span><span class="pr-val"><%= p.max_amount ? '$' + p.max_amount.toLocaleString() : 'Unlimited' %></span></div>
+          <div class="plan-row"><span class="pr-key">Total Return</span><span class="pr-val" style="color:var(--gold-500);"><%=  (p.daily_percent * p.term_days).toFixed(0) %>%</span></div>
+          <div class="plan-row"><span class="pr-key">Principal</span><span class="pr-val" style="color:var(--emerald-500);"><%= p.deposit_returned ? '✓ Returned' : 'Included in payout' %></span></div>
+          <div class="plan-row"><span class="pr-key">Term</span><span class="pr-val"><%= p.term_days %> Days</span></div>
+          <div class="plan-row"><span class="pr-key">Payouts</span><span class="pr-val">⚡ Instant</span></div>
+        </div>
+        <div class="plan-card-foot">
+          <a href="/register" class="btn btn-gold btn-block">Start Investing</a>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--surface);padding:56px 0;">
+  <div class="container" style="max-width:760px;">
+    <div class="section-title">
+      <h2>How It Works</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:28px;text-align:center;">
+      <div>
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--gold-100);color:var(--gold-500);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 14px;">1</div>
+        <h4 style="margin-bottom:8px;">Create Account</h4>
+        <p style="font-size:.875rem;">Register for free and verify your email in under a minute.</p>
+      </div>
+      <div>
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--gold-100);color:var(--gold-500);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 14px;">2</div>
+        <h4 style="margin-bottom:8px;">Make a Deposit</h4>
+        <p style="font-size:.875rem;">Fund your account using any supported cryptocurrency.</p>
+      </div>
+      <div>
+        <div style="width:60px;height:60px;border-radius:50%;background:var(--gold-100);color:var(--gold-500);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 14px;">3</div>
+        <h4 style="margin-bottom:8px;">Earn Daily</h4>
+        <p style="font-size:.875rem;">Select a plan and watch your returns grow every day.</p>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:36px;">
+      <a href="/register" class="btn btn-gold btn-lg">Get Started Now</a>
+    </div>
+  </div>
+</section>

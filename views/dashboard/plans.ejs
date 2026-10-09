@@ -1,0 +1,55 @@
+<div class="dash-page-title">
+  <h1>Investment Plans</h1>
+  <p>Choose a plan and start earning daily returns</p>
+</div>
+
+<% if (locals.flash_error) { %><div class="alert alert-error">⚠️ <%= flash_error %></div><% } %>
+<% if (locals.flash_success) { %><div class="alert alert-success">✅ <%= flash_success %></div><% } %>
+
+<% if (user.balance < 50) { %>
+<div class="alert alert-warning">
+  💡 Your balance is <%= currency(user.balance) %>. <a href="/dashboard/deposit" style="color:inherit;text-decoration:underline;font-weight:600;">Make a deposit</a> to start investing.
+</div>
+<% } %>
+
+<div class="plans-dash-grid">
+  <% plans.forEach((p, i) => { %>
+  <div class="plan-card <%= i === 2 ? 'featured' : '' %>" style="border-color:<%= i === 2 ? 'var(--gold-500)' : '' %>">
+    <% if (i === 2) { %><div class="featured-tag">Popular</div><% } %>
+    <div class="plan-card-head">
+      <div class="plan-label"><%= p.label %></div>
+      <div class="plan-rate"><%= p.daily_percent %><span class="plan-rate-unit">%</span></div>
+      <div class="plan-term">Daily · <%= p.term_days %>-day term</div>
+    </div>
+    <div class="plan-card-body">
+      <div class="plan-row"><span class="pr-key">Min Deposit</span><span class="pr-val"><%= helpers.currency(p.min_amount) %></span></div>
+      <div class="plan-row"><span class="pr-key">Max Deposit</span><span class="pr-val"><%= p.max_amount ? helpers.currency(p.max_amount) : 'Unlimited' %></span></div>
+      <div class="plan-row"><span class="pr-key">Total Return</span><span class="pr-val" style="color:var(--gold-500);"><%= (p.daily_percent * p.term_days).toFixed(0) %>%</span></div>
+      <div class="plan-row"><span class="pr-key">Principal</span><span class="pr-val" style="color:var(--emerald-500);"><%= p.deposit_returned ? '✓ Returned' : 'Included' %></span></div>
+      <div class="plan-row"><span class="pr-key">Payouts</span><span class="pr-val">⚡ Instant</span></div>
+    </div>
+    <div class="plan-card-foot">
+      <form action="/dashboard/invest" method="POST" id="form-plan-<%= p.id %>">
+        <input type="hidden" name="plan_id" value="<%= p.id %>">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label" style="font-size:.78rem;">Amount (USD)</label>
+          <input type="number" name="amount" class="form-control"
+            placeholder="Min $<%= p.min_amount %>"
+            min="<%= p.min_amount %>"
+            <%= p.max_amount ? 'max="' + p.max_amount + '"' : '' %>
+            step="0.01" required>
+        </div>
+        <button type="submit" class="btn btn-gold btn-block">Invest Now</button>
+      </form>
+    </div>
+  </div>
+  <% }) %>
+</div>
+
+<div style="background:var(--surface);border-radius:var(--radius);padding:24px;margin-top:28px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+  <div>
+    <h4 style="margin-bottom:4px;">Your Balance</h4>
+    <p style="font-size:.875rem;">Available to invest: <strong style="color:var(--gold-500);"><%= helpers.currency(user.balance) %></strong></p>
+  </div>
+  <a href="/dashboard/deposit" class="btn btn-gold">+ Top Up Balance</a>
+</div>

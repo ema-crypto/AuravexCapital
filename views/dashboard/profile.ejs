@@ -1,0 +1,106 @@
+<div class="dash-page-title">
+  <h1>Profile Settings</h1>
+  <p>Manage your personal information and account security</p>
+</div>
+
+<% if (locals.success && success.length) { %><div class="alert alert-success">✅ <%= success[0] %></div><% } %>
+<% if (locals.errors && errors.length) { %><div class="alert alert-error">⚠️ <%= errors[0] %></div><% } %>
+
+<!-- Tabs -->
+<div class="profile-tabs">
+  <div class="profile-tab active" data-panel="panel-personal">👤 Personal</div>
+  <div class="profile-tab" data-panel="panel-security">🔒 Security</div>
+  <div class="profile-tab" data-panel="panel-referral">🎁 Referral</div>
+</div>
+
+<!-- Personal -->
+<div class="profile-panel active" id="panel-personal">
+  <div class="profile-info-grid">
+    <h4 style="margin-bottom:16px;">Personal Information</h4>
+    <div class="pig-row" style="margin-bottom:20px;">
+      <div class="pi-field"><div class="pi-label">Full Name</div><div class="pi-value"><%= user.full_name %></div></div>
+      <div class="pi-field"><div class="pi-label">Email Address</div><div class="pi-value"><%= user.email %></div></div>
+      <div class="pi-field"><div class="pi-label">Country</div><div class="pi-value"><%= user.country || '—' %></div></div>
+      <div class="pi-field"><div class="pi-label">Member Since</div><div class="pi-value"><%= dateStr(user.created_at) %></div></div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h4 style="margin-bottom:20px;">Edit Personal Information</h4>
+    <form action="/dashboard/profile" method="POST">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" name="full_name" class="form-control" value="<%= user.full_name %>" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country</label>
+          <select name="country" class="form-control">
+            <% ['Nigeria','United States','United Kingdom','Ghana','Kenya','South Africa','Canada','Australia','India','Other'].forEach(c => { %>
+            <option value="<%= c %>" <%= user.country === c ? 'selected' : '' %>><%= c %></option>
+            <% }) %>
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-gold">Update Profile</button>
+    </form>
+  </div>
+</div>
+
+<!-- Security -->
+<div class="profile-panel" id="panel-security">
+  <div class="form-card" style="max-width:500px;">
+    <h4 style="margin-bottom:20px;">Change Password</h4>
+    <form action="/dashboard/profile/password" method="POST">
+      <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <div class="input-wrap">
+          <input type="password" name="current_password" class="form-control" placeholder="••••••••" required>
+          <span class="password-toggle">🔒</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <div class="input-wrap">
+          <input type="password" name="new_password" class="form-control" placeholder="Min 8 characters" required>
+          <span class="password-toggle">🔒</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <div class="input-wrap">
+          <input type="password" name="confirm_password" class="form-control" placeholder="Repeat new password" required>
+          <span class="password-toggle">🔒</span>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-dark">Change Password</button>
+    </form>
+  </div>
+</div>
+
+<!-- Referral -->
+<div class="profile-panel" id="panel-referral">
+  <div class="referral-dash-card">
+    <h3 style="color:#fff;margin-bottom:8px;">Your Referral Program</h3>
+    <p style="color:var(--text-secondary);font-size:.875rem;margin-bottom:20px;">Share your unique link and earn 5% commission on each of 3 referral levels.</p>
+
+    <div class="ref-stats-row" style="margin-bottom:24px;">
+      <div class="rsr-item">
+        <div class="rsr-val" style="color:var(--gold-400);">5% / 5% / 5%</div>
+        <div class="rsr-lbl">Commission Rates</div>
+      </div>
+      <div class="rsr-item">
+        <div class="rsr-val"><%= currency(user.referral_balance) %></div>
+        <div class="rsr-lbl">Referral Balance</div>
+      </div>
+    </div>
+
+    <div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:8px;">Your referral link:</div>
+    <div class="ref-link-row">
+      <input id="ref-link-input" type="text" class="ref-link-input" value="http://localhost:3000/register?ref=<%= user.referral_code %>" readonly>
+      <button id="copy-ref-link" class="btn btn-gold btn-sm">Copy Link</button>
+    </div>
+
+    <div style="margin-top:20px;font-size:.8rem;color:rgba(255,255,255,.4);">Referral code: <strong style="color:var(--gold-400)"><%= user.referral_code %></strong></div>
+  </div>
+</div>

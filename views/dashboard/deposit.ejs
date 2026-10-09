@@ -1,0 +1,112 @@
+<div class="dash-page-title">
+  <h1>Make a Deposit</h1>
+  <p>Fund your account using any supported cryptocurrency</p>
+</div>
+
+<% if (locals.success && success.length) { %><div class="alert alert-success">✅ <%= success[0] %></div><% } %>
+
+<%
+// Build a JS map of network → address for client-side switching
+const walletMap = {};
+(depositWallets || []).forEach(w => { walletMap[w.network] = { address: w.address, label: w.label, symbol: w.symbol }; });
+const firstWallet = (depositWallets || [])[0];
+%>
+
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:28px;align-items:start;">
+  <div>
+    <div class="form-card" style="margin-bottom:20px;">
+      <h3 style="margin-bottom:6px;">Select Cryptocurrency</h3>
+      <p style="font-size:.875rem;margin-bottom:20px;">Choose the network you want to deposit with.</p>
+      <div class="crypto-options">
+        <%
+        // Map network → cryptocurrency-icons slug (jsdelivr CDN)
+        const coinIcons = {
+          'BTC':        'btc',
+          'ETH':        'eth',
+          'USDT-TRC20': 'usdt',
+          'USDT-ERC20': 'usdt',
+          'LTC':        'ltc',
+          'DOGE':       'doge',
+          'TRX':        'trx',
+          'XRP':        'xrp',
+          'DASH':       'dash'
+        };
+        const iconBase = 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/';
+      %>
+        <% (depositWallets || []).forEach((w, idx) => { %>
+        <div class="crypto-opt <%= idx === 0 ? 'selected' : '' %>" data-network="<%= w.network %>">
+          <div class="co-avatar">
+            <img src="<%= iconBase %><%= (coinIcons[w.network] || w.symbol.toLowerCase()) %>.svg"
+                 alt="<%= w.symbol %>"
+                 onerror="this.style.display='none';this.parentNode.innerHTML='<span style=\'font-size:1.6rem;\'>🪙</span>'">
+          </div>
+          <div class="co-name"><%= w.label.replace(/\s*\(.*?\)/,'') %></div>
+          <div class="co-sym"><%= w.network %></div>
+        </div>
+        <% }) %>
+      </div>
+
+      <div class="deposit-address-box" id="deposit-address-box">
+        <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:6px;">Send <strong id="deposit-network"><%= firstWallet ? firstWallet.label : '' %></strong> to this address:</div>
+        <div class="dab-address" id="deposit-address"><%= firstWallet ? firstWallet.address : 'Contact support for your deposit address' %></div>
+        <p style="font-size:.78rem;color:var(--text-muted);">
+          ⚠️ Only send the selected cryptocurrency to this address.<br>
+          Your balance updates automatically after blockchain confirmation.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="form-card" style="margin-bottom:16px;">
+      <h4 style="margin-bottom:16px;">Your Current Balance</h4>
+      <div style="font-size:2rem;font-weight:800;color:var(--gold-500);margin-bottom:4px;"><%= currency(user.balance) %></div>
+      <div style="font-size:.8rem;color:var(--text-muted);">Available USDT</div>
+      <div style="border-top:1px solid var(--border);margin:16px 0;"></div>
+      <a href="/dashboard/plans" class="btn btn-gold btn-block">Invest Now</a>
+    </div>
+
+    <div class="form-card">
+      <h4 style="margin-bottom:14px;">Deposit Instructions</h4>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-100);color:var(--gold-500);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:.85rem;">1</div>
+          <p style="font-size:.85rem;">Select your preferred cryptocurrency above</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-100);color:var(--gold-500);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:.85rem;">2</div>
+          <p style="font-size:.85rem;">Copy the deposit address shown</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-100);color:var(--gold-500);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:.85rem;">3</div>
+          <p style="font-size:.85rem;">Send funds from your external wallet</p>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="width:28px;height:28px;border-radius:50%;background:var(--gold-100);color:var(--gold-500);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-size:.85rem;">4</div>
+          <p style="font-size:.85rem;">Your balance updates within ~2 minutes after blockchain confirmation</p>
+        </div>
+      </div>
+      <div style="background:var(--surface-2);border-radius:8px;padding:14px;margin-top:16px;font-size:.8rem;color:var(--text-muted);">
+        <strong>Need help?</strong> Contact us at <a href="mailto:support@auravexcapital.ltd" style="color:var(--gold-500);">support@auravexcapital.ltd</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Wallet address map injected from server
+const WALLETS = <%- JSON.stringify(walletMap) %>;
+
+document.querySelectorAll('.crypto-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.crypto-opt').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected');
+    const network = opt.dataset.network;
+    const w = WALLETS[network];
+    if (w) {
+      document.getElementById('deposit-network').textContent = w.label;
+      document.getElementById('deposit-address').textContent = w.address;
+    }
+  });
+});
+</script>

@@ -1,0 +1,42 @@
+<% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
+
+<div style="max-width:600px;">
+  <div class="a-card">
+    <div class="a-card-title" style="margin-bottom:20px;">Site Configuration</div>
+    <form method="POST" action="/admin/settings">
+      <div class="a-form-group">
+        <label>Site Name</label>
+        <input type="text" name="site_name" value="<%= settings.site_name || 'AuravexCapital' %>">
+      </div>
+      <div class="a-form-group">
+        <label>Support Email</label>
+        <input type="email" name="support_email" value="<%= settings.support_email || '' %>">
+      </div>
+      <div class="a-form-group">
+        <label>WhatsApp Number <span style="color:var(--text-muted);font-size:.75rem;">(with country code, e.g. +447911123456)</span></label>
+        <input type="text" name="whatsapp_number" value="<%= settings.whatsapp_number || '' %>" placeholder="+447911123456">
+      </div>
+      <div class="a-form-row">
+        <div class="a-form-group">
+          <label>Minimum Withdrawal ($)</label>
+          <input type="number" name="min_withdrawal" value="<%= settings.min_withdrawal || '10' %>" min="0" step="0.01">
+        </div>
+        <div class="a-form-group">
+          <label>Withdrawal Fee (%)</label>
+          <input type="number" name="withdrawal_fee_pct" value="<%= settings.withdrawal_fee_pct || '0' %>" min="0" max="100" step="0.1">
+        </div>
+      </div>
+      <button type="submit" class="btn btn-gold">Save Settings</button>
+    </form>
+  </div>
+
+  <div class="a-card" style="margin-top:20px;">
+    <div class="a-card-title" style="margin-bottom:16px;">Admin Credentials</div>
+    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:14px;">
+      To change the admin password, update the password directly in the database or add a password-change form here.
+    </p>
+    <div style="background:var(--bg3);padding:12px 16px;border-radius:8px;font-size:.82rem;color:var(--text-muted);">
+      Login URL: <code style="color:var(--gold);">/admin/login</code>
+    </div>
+  </div>
+</div>

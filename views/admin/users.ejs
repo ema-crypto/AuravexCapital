@@ -1,0 +1,61 @@
+<% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
+<% if (errors && errors.length) { %><div class="a-alert a-alert-error"><%= errors[0] %></div><% } %>
+
+<form method="GET" action="/admin/users" class="filter-bar">
+  <input type="text" name="search" placeholder="Search name or email…" value="<%= search %>">
+  <select name="filter" onchange="this.form.submit()" style="padding:7px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;">
+    <option value="all"       <%= filter === 'all'       ? 'selected' : '' %>>All Users</option>
+    <option value="active"    <%= filter === 'active'    ? 'selected' : '' %>>Active</option>
+    <option value="suspended" <%= filter === 'suspended' ? 'selected' : '' %>>Suspended</option>
+  </select>
+  <button type="submit" class="btn btn-gold">Search</button>
+</form>
+
+<div class="a-card">
+  <div class="a-card-header">
+    <div class="a-card-title">Users (<%= users.length %>)</div>
+  </div>
+  <div class="a-table-wrap">
+    <table class="a-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Balance</th>
+          <th>Deposited</th>
+          <th>Status</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(u => { %>
+        <tr>
+          <td><a href="/admin/users/<%= u.id %>" style="font-weight:500;"><%= u.full_name %></a></td>
+          <td style="color:var(--text-muted);font-size:.8rem;"><%= u.email %></td>
+          <td style="font-weight:600;color:var(--gold);">$<%= Number(u.balance).toFixed(2) %></td>
+          <td style="font-size:.8rem;">$<%= Number(u.total_deposited).toFixed(2) %></td>
+          <td><span class="badge <%= u.is_suspended ? 'badge-red' : 'badge-green' %>"><%= u.is_suspended ? 'Suspended' : 'Active' %></span></td>
+          <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(u.created_at) %></td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <a href="/admin/users/<%= u.id %>" class="btn btn-outline btn-sm">View</a>
+              <form method="POST" action="/admin/users/<%= u.id %>/suspend" style="display:inline;">
+                <button type="submit" class="btn btn-sm <%= u.is_suspended ? 'btn-success' : 'btn-outline' %>" style="cursor:pointer;">
+                  <%= u.is_suspended ? 'Unsuspend' : 'Suspend' %>
+                </button>
+              </form>
+              <form method="POST" action="/admin/users/<%= u.id %>/delete" style="display:inline;" onsubmit="return confirm('Permanently delete <%= u.full_name %>? This cannot be undone.')">
+                <button type="submit" class="btn btn-danger btn-sm" style="cursor:pointer;">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+        <% if (!users.length) { %>
+        <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:32px;">No users found</td></tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</div>

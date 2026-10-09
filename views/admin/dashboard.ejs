@@ -1,0 +1,90 @@
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-label">Total Users</div>
+    <div class="stat-value"><%= totalUsers %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Active Users</div>
+    <div class="stat-value green"><%= activeUsers %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Suspended</div>
+    <div class="stat-value red"><%= suspendedUsers %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Invested</div>
+    <div class="stat-value gold">$<%= Number(totalInvested).toLocaleString('en-US', {minimumFractionDigits:2}) %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Deposited</div>
+    <div class="stat-value gold">$<%= Number(totalDeposited).toLocaleString('en-US', {minimumFractionDigits:2}) %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Total Withdrawn</div>
+    <div class="stat-value"><%= helpers.currency(totalWithdrawn) %></div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Pending Withdrawals</div>
+    <div class="stat-value <%= pendingWithdrawals > 0 ? 'gold' : '' %>"><%= pendingWithdrawals %></div>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+  <!-- Recent users -->
+  <div class="a-card">
+    <div class="a-card-header">
+      <div class="a-card-title">Recent Registrations</div>
+      <a href="/admin/users" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="a-table-wrap">
+      <table class="a-table">
+        <thead><tr><th>Name</th><th>Email</th><th>Joined</th><th>Status</th></tr></thead>
+        <tbody>
+          <% recentUsers.forEach(u => { %>
+          <tr>
+            <td><a href="/admin/users/<%= u.id %>"><%= u.full_name %></a></td>
+            <td style="color:var(--text-muted);font-size:.78rem;"><%= u.email %></td>
+            <td style="color:var(--text-muted);font-size:.78rem;"><%= helpers.dateStr(u.created_at) %></td>
+            <td><span class="badge <%= u.is_suspended ? 'badge-red' : 'badge-green' %>"><%= u.is_suspended ? 'Suspended' : 'Active' %></span></td>
+          </tr>
+          <% }) %>
+          <% if (!recentUsers.length) { %>
+          <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">No users yet</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Recent transactions -->
+  <div class="a-card">
+    <div class="a-card-header">
+      <div class="a-card-title">Recent Transactions</div>
+      <a href="/admin/transactions" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="a-table-wrap">
+      <table class="a-table">
+        <thead><tr><th>User</th><th>Type</th><th>Amount</th><th>Status</th></tr></thead>
+        <tbody>
+          <% recentTxns.forEach(t => { %>
+          <tr>
+            <td style="font-size:.78rem;"><%= t.full_name %></td>
+            <td><span class="badge <%= t.type === 'deposit' ? 'badge-green' : t.type === 'withdrawal' ? 'badge-gold' : 'badge-gray' %>"><%= t.type %></span></td>
+            <td style="font-weight:600;">$<%= Number(t.amount).toFixed(2) %></td>
+            <td><span class="badge <%= t.status === 'completed' ? 'badge-green' : t.status === 'pending' ? 'badge-gold' : 'badge-red' %>"><%= t.status %></span></td>
+          </tr>
+          <% }) %>
+          <% if (!recentTxns.length) { %>
+          <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">No transactions yet</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;display:flex;gap:14px;">
+  <a href="/admin/users" class="btn btn-gold">Manage Users</a>
+  <a href="/admin/wallets" class="btn btn-outline">Edit Wallets</a>
+  <a href="/admin/transactions?filter=withdrawal" class="btn btn-outline">Pending Withdrawals</a>
+</div>

@@ -1,0 +1,78 @@
+<div class="page-header">
+  <div class="container">
+    <div class="breadcrumb"><a href="/">Home</a><span class="breadcrumb-sep">/</span><span>Contact</span></div>
+    <h1>Contact Us</h1>
+    <p>We're here to help. Reach out and we'll respond within 24 hours.</p>
+  </div>
+</div>
+
+<section style="background:var(--surface-2);padding:72px 0;">
+  <div class="container">
+    <% if (locals.success && success.length) { %>
+    <div class="alert alert-success">✅ <%= success[0] %></div>
+    <% } %>
+    <% if (locals.errors && errors.length) { %>
+    <div class="alert alert-error">⚠️ <%= errors[0] %></div>
+    <% } %>
+
+    <div class="contact-grid">
+      <div class="contact-info">
+        <div class="ci-card">
+          <div class="ci-icon">📍</div>
+          <div>
+            <div class="ci-label">Company Address</div>
+            <div class="ci-value">Egerton Wharf, Wirral<br>United Kingdom, CH41 1LD</div>
+          </div>
+        </div>
+        <div class="ci-card">
+          <div class="ci-icon">✉️</div>
+          <div>
+            <div class="ci-label">Email Support</div>
+            <div class="ci-value"><a href="mailto:support@auravexcapital.ltd" style="color:var(--gold-500);">support@auravexcapital.ltd</a></div>
+          </div>
+        </div>
+        <div class="ci-card">
+          <div class="ci-icon">🌐</div>
+          <div>
+            <div class="ci-label">Response Time</div>
+            <div class="ci-value">Within 24 hours</div>
+          </div>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--navy-900),var(--navy-800));border-radius:var(--radius);padding:24px;margin-top:4px;">
+          <h4 style="color:#fff;margin-bottom:10px;">Quick Links</h4>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <a href="/faq" style="color:var(--gold-400);font-size:.875rem;">📖 Browse the FAQ</a>
+            <a href="/plans" style="color:var(--gold-400);font-size:.875rem;">📈 View Investment Plans</a>
+            <a href="/register" style="color:var(--gold-400);font-size:.875rem;">🚀 Create an Account</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <h3 style="margin-bottom:6px;">Send a Message</h3>
+        <p style="margin-bottom:24px;font-size:.875rem;">To prevent missing emails, please check your spam folder if you do not receive a reply.</p>
+        <form action="/contact" method="POST">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Full Name *</label>
+              <input type="text" name="name" class="form-control" placeholder="Your full name" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address *</label>
+              <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject *</label>
+            <input type="text" name="subject" class="form-control" placeholder="What is this regarding?" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message *</label>
+            <textarea name="message" class="form-control" placeholder="Describe your issue or question in detail..." rows="6" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-gold btn-block btn-lg">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
