@@ -2,14 +2,18 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const DB_PATH = path.join(__dirname, '../../data/auravexcapital.db');
+const DB_PATH = process.env.VERCEL
+  ? '/tmp/auravexcapital.db'
+  : path.join(__dirname, '../../data/auravexcapital.db');
 
 let db;
 
 function getDb() {
   if (!db) {
-    const fs = require('fs');
-    fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    if (!process.env.VERCEL) {
+      const fs = require('fs');
+      fs.mkdirSync(path.dirname(DB_PATH), { recursive: true });
+    }
     db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
