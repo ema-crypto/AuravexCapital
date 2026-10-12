@@ -1,31 +1,19 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "public/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "app.js",
-      "use": "@vercel/node"
-    }
+    { "src": "public/**", "use": "@vercel/static" },
+    { "src": "app.js", "use": "@vercel/node" }
   ],
   "routes": [
+    { "src": "/css/(.*)",    "dest": "/public/css/$1" },
+    { "src": "/js/(.*)",     "dest": "/public/js/$1" },
+    { "src": "/images/(.*)", "dest": "/public/images/$1" },
+    { "src": "/(.*)",        "dest": "app.js" }
+  ],
+  "crons": [
     {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/images/(.*)",
-      "dest": "/public/images/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "app.js"
+      "path": "/api/cron/earnings",
+      "schedule": "0 0 * * *"
     }
   ]
 }

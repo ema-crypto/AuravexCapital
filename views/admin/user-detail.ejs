@@ -120,7 +120,7 @@
 
 <!-- Referrals -->
 <% if (referrals.length) { %>
-<div class="a-card">
+<div class="a-card" style="margin-bottom:20px;">
   <div class="a-card-header"><div class="a-card-title">Referrals (<%= referrals.length %>)</div></div>
   <div class="a-table-wrap">
     <table class="a-table">
@@ -139,3 +139,45 @@
   </div>
 </div>
 <% } %>
+
+<!-- KYC Submission -->
+<div class="a-card">
+  <div class="a-card-header">
+    <div class="a-card-title">KYC Verification</div>
+    <% if (user.kyc_status === 'approved') { %><span class="badge badge-green">Approved</span>
+    <% } else if (user.kyc_status === 'pending') { %><span class="badge badge-gold">Pending Review</span>
+    <% } else if (user.kyc_status === 'rejected') { %><span class="badge badge-red">Rejected</span>
+    <% } else { %><span class="badge badge-gray">Not Submitted</span><% } %>
+  </div>
+  <% if (kycSub) { %>
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px 24px;margin-bottom:20px;">
+    <div><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Document Type</div><strong><%= kycSub.doc_type %></strong></div>
+    <div><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Document Number</div><strong><%= kycSub.doc_number %></strong></div>
+    <div><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Date of Birth</div><strong><%= kycSub.dob %></strong></div>
+    <div><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Country of Issue</div><strong><%= kycSub.country_of_issue %></strong></div>
+    <div><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Submitted</div><strong><%= helpers.dateStr(kycSub.submitted_at) %></strong></div>
+    <% if (kycSub.rejection_reason) { %>
+    <div><div style="font-size:.7rem;color:var(--text-muted);margin-bottom:3px;">Rejection Reason</div><strong style="color:#ef4444;"><%= kycSub.rejection_reason %></strong></div>
+    <% } %>
+  </div>
+  <% if (kycSub.status === 'pending') { %>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+    <form method="POST" action="/admin/kyc/<%= kycSub.id %>/approve">
+      <button type="submit" class="btn btn-success btn-sm">✓ Approve KYC</button>
+    </form>
+    <form method="POST" action="/admin/kyc/<%= kycSub.id %>/reject" style="display:flex;gap:8px;">
+      <input type="text" name="reason" placeholder="Rejection reason (optional)" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg2);color:var(--text-dark);font-size:.82rem;width:240px;">
+      <button type="submit" class="btn btn-danger btn-sm">✗ Reject</button>
+    </form>
+  </div>
+  <% } else if (kycSub.status === 'approved') { %>
+  <p style="color:var(--success);font-size:.85rem;">KYC approved on <%= helpers.dateStr(kycSub.reviewed_at) %>.</p>
+  <% } else if (kycSub.status === 'rejected') { %>
+  <form method="POST" action="/admin/kyc/<%= kycSub.id %>/approve">
+    <button type="submit" class="btn btn-success btn-sm">Re-approve KYC</button>
+  </form>
+  <% } %>
+  <% } else { %>
+  <p style="color:var(--text-muted);font-size:.85rem;padding:12px 0;">No KYC submission on file. User hasn't submitted documents yet.</p>
+  <% } %>
+</div>

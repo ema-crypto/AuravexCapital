@@ -18,14 +18,18 @@ router.post('/users/:id/suspend',        requireAdmin, admin.suspendUser);
 router.post('/users/:id/delete',         requireAdmin, admin.deleteUser);
 router.post('/users/:id/adjust-balance', requireAdmin, admin.adjustBalance);
 
+// KYC
+router.post('/kyc/:submissionId/approve', requireAdmin, admin.approveKyc);
+router.post('/kyc/:submissionId/reject',  requireAdmin, admin.rejectKyc);
+
 // Transactions
-router.get('/transactions',                          requireAdmin, admin.getTransactions);
-router.post('/transactions/:txnId/approve',          requireAdmin, admin.approveWithdrawal);
-router.post('/transactions/:txnId/reject',           requireAdmin, admin.rejectWithdrawal);
+router.get('/transactions',                 requireAdmin, admin.getTransactions);
+router.post('/transactions/:txnId/approve', requireAdmin, admin.approveWithdrawal);
+router.post('/transactions/:txnId/reject',  requireAdmin, admin.rejectWithdrawal);
 
 // Deposit Wallets
-router.get('/wallets',         requireAdmin, admin.getWallets);
-router.post('/wallets/:id',    requireAdmin, admin.updateWallet);
+router.get('/wallets',      requireAdmin, admin.getWallets);
+router.post('/wallets/:id', requireAdmin, admin.updateWallet);
 
 // Settings
 router.get('/settings',  requireAdmin, admin.getSettings);

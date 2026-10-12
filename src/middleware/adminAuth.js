@@ -1,17 +1,15 @@
-const { getDb } = require('../models/database');
+const { queryOne } = require('../models/database');
 
-function requireAdmin(req, res, next) {
-  if (!req.session || !req.session.adminId) {
-    return res.redirect('/admin/login');
+async function requireAdmin(req, res, next) {
+  if (!req.session || !req.session.adminId) return res.redirect('/admin/login');
+  try {
+    const admin = await queryOne('SELECT * FROM users WHERE id = ? AND is_admin = 1', [req.session.adminId]);
+    if (!admin) { req.session.destroy(); return res.redirect('/admin/login'); }
+    res.locals.adminUser = admin;
+    next();
+  } catch (e) {
+    res.redirect('/admin/login');
   }
-  const db = getDb();
-  const admin = db.prepare('SELECT * FROM users WHERE id = ? AND is_admin = 1').get(req.session.adminId);
-  if (!admin) {
-    req.session.destroy();
-    return res.redirect('/admin/login');
-  }
-  res.locals.adminUser = admin;
-  next();
 }
 
 function requireAdminGuest(req, res, next) {

@@ -1,232 +1,184 @@
 const bcrypt = require('bcryptjs');
-const { getDb, getSetting } = require('../models/database');
+const { queryOne, query, run } = require('../models/database');
 const { currency, dateStr } = require('../helpers/format');
 
-// ── Auth ──────────────────────────────────────────────────
 exports.getLogin = (req, res) => {
-  res.render('admin/login', {
-    title: 'Admin Login',
-    errors: req.flash('error'),
-    success: req.flash('success')
-  });
+  res.render('admin/login', { title: 'Admin Login', errors: req.flash('error'), success: req.flash('success') });
 };
 
 exports.postLogin = async (req, res) => {
   const { email, password } = req.body;
-  const db = getDb();
-  const user = db.prepare('SELECT * FROM users WHERE email = ? AND is_admin = 1').get((email || '').toLowerCase().trim());
+  const user = await queryOne('SELECT * FROM users WHERE email = ? AND is_admin = 1', [(email || '').toLowerCase().trim()]);
   if (!user || !(await bcrypt.compare(password, user.password))) {
-    req.flash('error', 'Invalid admin credentials.');
-    return res.redirect('/admin/login');
+    req.flash('error', 'Invalid admin credentials.'); return res.redirect('/admin/login');
   }
-  req.session.adminId = user.id;
+  req.session.adminId = Number(user.id);
   res.redirect('/admin');
 };
 
-exports.logout = (req, res) => {
-  delete req.session.adminId;
-  res.redirect('/admin/login');
-};
+exports.logout = (req, res) => { delete req.session.adminId; res.redirect('/admin/login'); };
 
-// ── Dashboard ─────────────────────────────────────────────
-exports.getDashboard = (req, res) => {
-  const db = getDb();
-  const totalUsers       = db.prepare("SELECT COUNT(*) as c FROM users WHERE is_admin = 0").get().c;
-  const activeUsers      = db.prepare("SELECT COUNT(*) as c FROM users WHERE is_admin = 0 AND is_suspended = 0").get().c;
-  const suspendedUsers   = db.prepare("SELECT COUNT(*) as c FROM users WHERE is_suspended = 1").get().c;
-  const totalInvested    = db.prepare("SELECT COALESCE(SUM(amount),0) as s FROM investments WHERE status='active'").get().s;
-  const totalDeposited   = db.prepare("SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE type='deposit' AND status='completed'").get().s;
-  const totalWithdrawn   = db.prepare("SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE type='withdrawal' AND status='completed'").get().s;
-  const pendingWithdrawals = db.prepare("SELECT COUNT(*) as c FROM transactions WHERE type='withdrawal' AND status='pending'").get().c;
-  const recentUsers      = db.prepare("SELECT * FROM users WHERE is_admin=0 ORDER BY created_at DESC LIMIT 8").all();
-  const recentTxns       = db.prepare("SELECT t.*, u.full_name, u.email FROM transactions t JOIN users u ON t.user_id=u.id ORDER BY t.created_at DESC LIMIT 10").all();
-
+exports.getDashboard = async (req, res) => {
+  const totalUsers        = Number((await queryOne("SELECT COUNT(*) as c FROM users WHERE is_admin = 0")).c);
+  const activeUsers       = Number((await queryOne("SELECT COUNT(*) as c FROM users WHERE is_admin = 0 AND is_suspended = 0")).c);
+  const suspendedUsers    = Number((await queryOne("SELECT COUNT(*) as c FROM users WHERE is_suspended = 1")).c);
+  const totalInvested     = Number((await queryOne("SELECT COALESCE(SUM(amount),0) as s FROM investments WHERE status='active'")).s);
+  const totalDeposited    = Number((await queryOne("SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE type='deposit' AND status='completed'")).s);
+  const totalWithdrawn    = Number((await queryOne("SELECT COALESCE(SUM(amount),0) as s FROM transactions WHERE type='withdrawal' AND status='completed'")).s);
+  const pendingWithdrawals = Number((await queryOne("SELECT COUNT(*) as c FROM transactions WHERE type='withdrawal' AND status='pending'")).c);
+  const recentUsers       = await query("SELECT * FROM users WHERE is_admin=0 ORDER BY created_at DESC LIMIT 8");
+  const recentTxns        = await query("SELECT t.*, u.full_name, u.email FROM transactions t JOIN users u ON t.user_id=u.id ORDER BY t.created_at DESC LIMIT 10");
   res.render('admin/dashboard', {
-    title: 'Admin Dashboard',
-    totalUsers, activeUsers, suspendedUsers,
+    title: 'Admin Dashboard', totalUsers, activeUsers, suspendedUsers,
     totalInvested, totalDeposited, totalWithdrawn, pendingWithdrawals,
-    recentUsers, recentTxns,
-    helpers: { currency, dateStr }
+    recentUsers, recentTxns, helpers: { currency, dateStr }
   });
 };
 
-// ── Users ─────────────────────────────────────────────────
-exports.getUsers = (req, res) => {
-  const db = getDb();
+exports.getUsers = async (req, res) => {
   const search = req.query.search || '';
   const filter = req.query.filter || 'all';
-
-  let query = "SELECT * FROM users WHERE is_admin = 0";
-  const params = [];
-  if (search) { query += " AND (full_name LIKE ? OR email LIKE ?)"; params.push(`%${search}%`, `%${search}%`); }
-  if (filter === 'suspended') query += " AND is_suspended = 1";
-  if (filter === 'active')    query += " AND is_suspended = 0";
-  query += " ORDER BY created_at DESC";
-
-  const users = db.prepare(query).all(...params);
-  res.render('admin/users', {
-    title: 'Manage Users',
-    users, search, filter,
-    success: req.flash('success'),
-    errors: req.flash('error'),
-    helpers: { currency, dateStr }
-  });
+  let sql = "SELECT * FROM users WHERE is_admin = 0";
+  const args = [];
+  if (search) { sql += " AND (full_name LIKE ? OR email LIKE ?)"; args.push(`%${search}%`, `%${search}%`); }
+  if (filter === 'suspended') sql += " AND is_suspended = 1";
+  if (filter === 'active')    sql += " AND is_suspended = 0";
+  sql += " ORDER BY created_at DESC";
+  const users = await query(sql, args);
+  res.render('admin/users', { title: 'Manage Users', users, search, filter, success: req.flash('success'), errors: req.flash('error'), helpers: { currency, dateStr } });
 };
 
-exports.getUser = (req, res) => {
-  const db = getDb();
-  const user = db.prepare('SELECT * FROM users WHERE id = ? AND is_admin = 0').get(req.params.id);
+exports.getUser = async (req, res) => {
+  const user = await queryOne('SELECT * FROM users WHERE id = ? AND is_admin = 0', [req.params.id]);
   if (!user) { req.flash('error', 'User not found.'); return res.redirect('/admin/users'); }
-
-  const investments = db.prepare(`
-    SELECT i.*, p.name as plan_name FROM investments i
-    JOIN plans p ON i.plan_id = p.id
-    WHERE i.user_id = ? ORDER BY i.created_at DESC LIMIT 20
-  `).all(user.id);
-
-  const transactions = db.prepare(
-    'SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 20'
-  ).all(user.id);
-
-  const referrals = db.prepare(`
-    SELECT u.full_name, u.email, r.level, r.commission, r.created_at
-    FROM referrals r JOIN users u ON r.referred_id = u.id
-    WHERE r.referrer_id = ? ORDER BY r.created_at DESC
-  `).all(user.id);
-
+  const investments  = await query("SELECT i.*, p.name as plan_name FROM investments i JOIN plans p ON i.plan_id=p.id WHERE i.user_id=? ORDER BY i.created_at DESC LIMIT 20", [user.id]);
+  const transactions = await query("SELECT * FROM transactions WHERE user_id=? ORDER BY created_at DESC LIMIT 20", [user.id]);
+  const referrals    = await query("SELECT u.full_name,u.email,r.level,r.commission,r.created_at FROM referrals r JOIN users u ON r.referred_id=u.id WHERE r.referrer_id=? ORDER BY r.created_at DESC", [user.id]);
+  const kycSub       = await queryOne('SELECT * FROM kyc_submissions WHERE user_id=? ORDER BY submitted_at DESC LIMIT 1', [user.id]);
   res.render('admin/user-detail', {
-    title: `User: ${user.full_name}`,
-    user, investments, transactions, referrals,
-    success: req.flash('success'),
-    errors: req.flash('error'),
-    helpers: { currency, dateStr }
+    title: `User: ${user.full_name}`, user, investments, transactions, referrals, kycSub,
+    success: req.flash('success'), errors: req.flash('error'), helpers: { currency, dateStr }
   });
 };
 
-exports.suspendUser = (req, res) => {
-  const db = getDb();
-  const user = db.prepare('SELECT * FROM users WHERE id = ? AND is_admin = 0').get(req.params.id);
+exports.suspendUser = async (req, res) => {
+  const user = await queryOne('SELECT * FROM users WHERE id = ? AND is_admin = 0', [req.params.id]);
   if (!user) { req.flash('error', 'User not found.'); return res.redirect('/admin/users'); }
   const newState = user.is_suspended ? 0 : 1;
-  db.prepare('UPDATE users SET is_suspended = ? WHERE id = ?').run(newState, user.id);
+  await run('UPDATE users SET is_suspended = ? WHERE id = ?', [newState, user.id]);
   req.flash('success', `${user.full_name} has been ${newState ? 'suspended' : 'reactivated'}.`);
   res.redirect(req.headers.referer || '/admin/users');
 };
 
-exports.deleteUser = (req, res) => {
-  const db = getDb();
-  const user = db.prepare('SELECT * FROM users WHERE id = ? AND is_admin = 0').get(req.params.id);
+exports.deleteUser = async (req, res) => {
+  const user = await queryOne('SELECT * FROM users WHERE id = ? AND is_admin = 0', [req.params.id]);
   if (!user) { req.flash('error', 'User not found.'); return res.redirect('/admin/users'); }
-
-  // Delete related data first
-  db.prepare('DELETE FROM referrals WHERE referrer_id = ? OR referred_id = ?').run(user.id, user.id);
-  db.prepare('DELETE FROM wallet_addresses WHERE user_id = ?').run(user.id);
-  db.prepare('DELETE FROM investments WHERE user_id = ?').run(user.id);
-  db.prepare('DELETE FROM transactions WHERE user_id = ?').run(user.id);
-  db.prepare('DELETE FROM users WHERE id = ?').run(user.id);
-
+  await run('DELETE FROM referrals WHERE referrer_id = ? OR referred_id = ?', [user.id, user.id]);
+  await run('DELETE FROM kyc_submissions WHERE user_id = ?', [user.id]);
+  await run('DELETE FROM wallet_addresses WHERE user_id = ?', [user.id]);
+  await run('DELETE FROM investments WHERE user_id = ?', [user.id]);
+  await run('DELETE FROM transactions WHERE user_id = ?', [user.id]);
+  await run('DELETE FROM users WHERE id = ?', [user.id]);
   req.flash('success', `User "${user.full_name}" (${user.email}) has been permanently deleted.`);
   res.redirect('/admin/users');
 };
 
-exports.adjustBalance = (req, res) => {
-  const db = getDb();
+exports.adjustBalance = async (req, res) => {
   const { amount, type, note } = req.body;
-  const user = db.prepare('SELECT * FROM users WHERE id = ? AND is_admin = 0').get(req.params.id);
+  const user = await queryOne('SELECT * FROM users WHERE id = ? AND is_admin = 0', [req.params.id]);
   if (!user) { req.flash('error', 'User not found.'); return res.redirect('/admin/users'); }
-
   const amt = parseFloat(amount);
   if (isNaN(amt) || amt <= 0) { req.flash('error', 'Invalid amount.'); return res.redirect(`/admin/users/${req.params.id}`); }
-
   if (type === 'credit') {
-    db.prepare('UPDATE users SET balance = balance + ?, total_deposited = total_deposited + ? WHERE id = ?').run(amt, amt, user.id);
-    db.prepare("INSERT INTO transactions (user_id, type, amount, status, note, txn_ref) VALUES (?, 'deposit', ?, 'completed', ?, ?)").run(user.id, amt, note || 'Admin credit', `ADM-${Date.now()}`);
+    await run('UPDATE users SET balance = balance + ?, total_deposited = total_deposited + ? WHERE id = ?', [amt, amt, user.id]);
+    await run("INSERT INTO transactions (user_id,type,amount,status,note,txn_ref) VALUES (?,'deposit',?,'completed',?,?)", [user.id, amt, note || 'Admin credit', `ADM-${Date.now()}`]);
     req.flash('success', `Credited $${amt.toFixed(2)} to ${user.full_name}'s balance.`);
   } else {
-    db.prepare('UPDATE users SET balance = MAX(0, balance - ?) WHERE id = ?').run(amt, user.id);
-    db.prepare("INSERT INTO transactions (user_id, type, amount, status, note, txn_ref) VALUES (?, 'debit', ?, 'completed', ?, ?)").run(user.id, amt, note || 'Admin debit', `ADM-${Date.now()}`);
+    await run('UPDATE users SET balance = MAX(0, balance - ?) WHERE id = ?', [amt, user.id]);
+    await run("INSERT INTO transactions (user_id,type,amount,status,note,txn_ref) VALUES (?,'debit',?,'completed',?,?)", [user.id, amt, note || 'Admin debit', `ADM-${Date.now()}`]);
     req.flash('success', `Debited $${amt.toFixed(2)} from ${user.full_name}'s balance.`);
   }
   res.redirect(`/admin/users/${req.params.id}`);
 };
 
-exports.approveWithdrawal = (req, res) => {
-  const db = getDb();
-  db.prepare("UPDATE transactions SET status='completed' WHERE id = ? AND type='withdrawal'").run(req.params.txnId);
+exports.approveKyc = async (req, res) => {
+  const sub = await queryOne('SELECT * FROM kyc_submissions WHERE id = ?', [req.params.submissionId]);
+  if (sub) {
+    await run("UPDATE kyc_submissions SET status='approved', reviewed_at=CURRENT_TIMESTAMP WHERE id=?", [sub.id]);
+    await run("UPDATE users SET kyc_status='approved' WHERE id=?", [sub.user_id]);
+    req.flash('success', 'KYC approved successfully.');
+  } else {
+    req.flash('error', 'Submission not found.');
+  }
+  res.redirect(req.headers.referer || '/admin/users');
+};
+
+exports.rejectKyc = async (req, res) => {
+  const reason = (req.body.reason || 'Documents could not be verified').trim();
+  const sub = await queryOne('SELECT * FROM kyc_submissions WHERE id = ?', [req.params.submissionId]);
+  if (sub) {
+    await run("UPDATE kyc_submissions SET status='rejected', rejection_reason=?, reviewed_at=CURRENT_TIMESTAMP WHERE id=?", [reason, sub.id]);
+    await run("UPDATE users SET kyc_status='rejected' WHERE id=?", [sub.user_id]);
+    req.flash('success', 'KYC rejected.');
+  } else {
+    req.flash('error', 'Submission not found.');
+  }
+  res.redirect(req.headers.referer || '/admin/users');
+};
+
+exports.approveWithdrawal = async (req, res) => {
+  await run("UPDATE transactions SET status='completed' WHERE id=? AND type='withdrawal'", [req.params.txnId]);
   req.flash('success', 'Withdrawal marked as completed.');
   res.redirect(req.headers.referer || '/admin/transactions');
 };
 
-exports.rejectWithdrawal = (req, res) => {
-  const db = getDb();
-  const txn = db.prepare("SELECT * FROM transactions WHERE id = ? AND type='withdrawal' AND status='pending'").get(req.params.txnId);
+exports.rejectWithdrawal = async (req, res) => {
+  const txn = await queryOne("SELECT * FROM transactions WHERE id=? AND type='withdrawal' AND status='pending'", [req.params.txnId]);
   if (txn) {
-    // Refund the amount
-    db.prepare('UPDATE users SET balance = balance + ? WHERE id = ?').run(txn.amount, txn.user_id);
-    db.prepare("UPDATE transactions SET status='failed' WHERE id = ?").run(txn.id);
+    await run('UPDATE users SET balance = balance + ? WHERE id = ?', [txn.amount, txn.user_id]);
+    await run("UPDATE transactions SET status='failed' WHERE id=?", [txn.id]);
   }
   req.flash('success', 'Withdrawal rejected and amount refunded to user.');
   res.redirect(req.headers.referer || '/admin/transactions');
 };
 
-// ── Transactions ──────────────────────────────────────────
-exports.getTransactions = (req, res) => {
-  const db = getDb();
-  const allowed = ['deposit','withdrawal','earning','referral','debit'];
+exports.getTransactions = async (req, res) => {
+  const allowed = ['deposit','withdrawal','earning','referral','debit','investment'];
   const filter = allowed.includes(req.query.filter) ? req.query.filter : 'all';
-  let query = "SELECT t.*, u.full_name, u.email FROM transactions t JOIN users u ON t.user_id=u.id";
-  const params = [];
-  if (filter !== 'all') { query += " WHERE t.type = ?"; params.push(filter); }
-  query += " ORDER BY t.created_at DESC LIMIT 100";
-  const transactions = db.prepare(query).all(...params);
-  res.render('admin/transactions', {
-    title: 'All Transactions',
-    transactions, filter,
-    success: req.flash('success'),
-    helpers: { currency, dateStr }
-  });
+  let sql = "SELECT t.*, u.full_name, u.email FROM transactions t JOIN users u ON t.user_id=u.id";
+  const args = [];
+  if (filter !== 'all') { sql += " WHERE t.type = ?"; args.push(filter); }
+  sql += " ORDER BY t.created_at DESC LIMIT 100";
+  const transactions = await query(sql, args);
+  res.render('admin/transactions', { title: 'All Transactions', transactions, filter, success: req.flash('success'), helpers: { currency, dateStr } });
 };
 
-// ── Deposit Wallets ───────────────────────────────────────
-exports.getWallets = (req, res) => {
-  const db = getDb();
-  const wallets = db.prepare('SELECT * FROM deposit_wallets ORDER BY sort_order').all();
-  res.render('admin/wallets', {
-    title: 'Deposit Wallet Addresses',
-    wallets,
-    success: req.flash('success'),
-    errors: req.flash('error')
-  });
+exports.getWallets = async (req, res) => {
+  const wallets = await query('SELECT * FROM deposit_wallets ORDER BY sort_order');
+  res.render('admin/wallets', { title: 'Deposit Wallet Addresses', wallets, success: req.flash('success'), errors: req.flash('error') });
 };
 
-exports.updateWallet = (req, res) => {
-  const db = getDb();
+exports.updateWallet = async (req, res) => {
   const { address, is_active } = req.body;
-  db.prepare("UPDATE deposit_wallets SET address = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
-    .run(address.trim(), is_active ? 1 : 0, req.params.id);
+  await run("UPDATE deposit_wallets SET address=?, is_active=?, updated_at=CURRENT_TIMESTAMP WHERE id=?", [address.trim(), is_active ? 1 : 0, req.params.id]);
   req.flash('success', 'Wallet address updated.');
   res.redirect('/admin/wallets');
 };
 
-// ── Settings ──────────────────────────────────────────────
-exports.getSettings = (req, res) => {
-  const db = getDb();
+exports.getSettings = async (req, res) => {
+  const rows = await query('SELECT key, value FROM site_settings');
   const settings = {};
-  db.prepare('SELECT key, value FROM site_settings').all().forEach(r => { settings[r.key] = r.value; });
-  res.render('admin/settings', {
-    title: 'Site Settings',
-    settings,
-    success: req.flash('success')
-  });
+  rows.forEach(r => { settings[r.key] = r.value; });
+  res.render('admin/settings', { title: 'Site Settings', settings, success: req.flash('success') });
 };
 
-exports.postSettings = (req, res) => {
-  const db = getDb();
-  const allowed = ['whatsapp_number', 'site_name', 'support_email', 'min_withdrawal', 'withdrawal_fee_pct'];
-  const upsert  = db.prepare("INSERT OR REPLACE INTO site_settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)");
-  allowed.forEach(key => {
-    if (req.body[key] !== undefined) upsert.run(key, req.body[key]);
-  });
+exports.postSettings = async (req, res) => {
+  const allowed = ['whatsapp_number','site_name','support_email','min_withdrawal','withdrawal_fee_pct','auto_withdrawal_limit','tawkto_id'];
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) {
+      await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES (?,?,CURRENT_TIMESTAMP)", [key, req.body[key]]);
+    }
+  }
   req.flash('success', 'Settings saved.');
   res.redirect('/admin/settings');
 };

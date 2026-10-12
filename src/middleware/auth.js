@@ -1,3 +1,5 @@
+const { queryOne } = require('../models/database');
+
 function requireAuth(req, res, next) {
   if (req.session && req.session.userId) return next();
   req.session.returnTo = req.originalUrl;
@@ -9,21 +11,23 @@ function requireGuest(req, res, next) {
   next();
 }
 
-function loadUser(req, res, next) {
+async function loadUser(req, res, next) {
   if (req.session && req.session.userId) {
-    const { getDb } = require('../models/database');
-    const db = getDb();
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
-    if (user) {
-      if (user.is_suspended) {
-        req.session.destroy(() => {});
+    try {
+      const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
+      if (user) {
+        if (user.is_suspended) {
+          req.session.destroy(() => {});
+          res.locals.isLoggedIn = false;
+          return res.redirect('/login?suspended=1');
+        }
+        res.locals.authUser = user;
+        res.locals.isLoggedIn = true;
+      } else {
+        req.session.destroy();
         res.locals.isLoggedIn = false;
-        return res.redirect('/login?suspended=1');
       }
-      res.locals.authUser = user;
-      res.locals.isLoggedIn = true;
-    } else {
-      req.session.destroy();
+    } catch (e) {
       res.locals.isLoggedIn = false;
     }
   } else {

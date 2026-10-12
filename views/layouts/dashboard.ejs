@@ -58,6 +58,9 @@
         <% if (authUser.kyc_status === 'none' || !authUser.kyc_status) { %><span style="background:#ef4444;color:#fff;font-size:.6rem;padding:1px 6px;border-radius:10px;margin-left:auto;">!</span><% } %>
         <% if (authUser.kyc_status === 'approved') { %><span style="color:var(--emerald-500);margin-left:auto;font-size:.75rem;">✓</span><% } %>
       </a>
+      <a href="/dashboard/referrals" class="nav-item <%= title === 'Referral Program' ? 'active' : '' %>">
+        <span class="nav-icon">🤝</span> Referrals
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -114,6 +117,17 @@
     document.getElementById('sidebar-overlay').classList.remove('active');
   });
 </script>
+
+  <!-- Tawk.to live chat -->
+  <% if (locals.tawktoId && tawktoId) { %>
+  <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;s1.src='https://embed.tawk.to/<%= tawktoId %>/default';
+    s1.charset='UTF-8';s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);})();
+  </script>
+  <% } %>
 
   <!-- WhatsApp floating button -->
   <% const whatsappNum = locals.whatsappNumber || ''; %>

@@ -26,6 +26,16 @@
           <input type="number" name="withdrawal_fee_pct" value="<%= settings.withdrawal_fee_pct || '0' %>" min="0" max="100" step="0.1">
         </div>
       </div>
+      <div class="a-form-row">
+        <div class="a-form-group">
+          <label>Auto-Approve Withdrawal ($) <span style="color:var(--text-muted);font-size:.75rem;">(0 = manual approval for all)</span></label>
+          <input type="number" name="auto_withdrawal_limit" value="<%= settings.auto_withdrawal_limit || '0' %>" min="0" step="0.01">
+        </div>
+        <div class="a-form-group">
+          <label>Tawk.to Widget ID <span style="color:var(--text-muted);font-size:.75rem;">(blank = disable live chat)</span></label>
+          <input type="text" name="tawkto_id" value="<%= settings.tawkto_id || '' %>" placeholder="e.g. 64a1b2/1h4abcd">
+        </div>
+      </div>
       <button type="submit" class="btn btn-gold">Save Settings</button>
     </form>
   </div>
