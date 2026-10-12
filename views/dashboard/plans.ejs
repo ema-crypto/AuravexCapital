@@ -1,6 +1,11 @@
-<div class="dash-page-title">
-  <h1>Investment Plans</h1>
-  <p>Choose a plan and start earning daily returns</p>
+<div class="dash-page-title" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;">
+  <div>
+    <h1><% if (locals.req && req.query.reinvest) { %>Reinvest Earnings<% } else { %>Investment Plans<% } %></h1>
+    <p><% if (locals.req && req.query.reinvest) { %>Roll your earnings back into a new plan<% } else { %>Choose a plan and start earning daily returns<% } %></p>
+  </div>
+  <% if (locals.req && req.query.reinvest) { %>
+  <a href="/dashboard/investments" class="btn btn-outline">← Back to Investments</a>
+  <% } %>
 </div>
 
 <% if (locals.flash_error) { %><div class="alert alert-error">⚠️ <%= flash_error %></div><% } %>
@@ -14,8 +19,13 @@
 
 <div class="plans-dash-grid">
   <% plans.forEach((p, i) => { %>
-  <div class="plan-card <%= i === 2 ? 'featured' : '' %>" style="border-color:<%= i === 2 ? 'var(--gold-500)' : '' %>">
-    <% if (i === 2) { %><div class="featured-tag">Popular</div><% } %>
+  <div class="plan-card <%= p.is_promo ? 'featured' : (i === 2 ? 'featured' : '') %>"
+       style="<%= p.is_promo ? 'border-color:#ef4444;' : (i === 2 ? 'border-color:var(--gold-500);' : '') %>">
+    <% if (p.is_promo) { %>
+    <div class="featured-tag" style="background:#ef4444;">🔥 Limited Time</div>
+    <% } else if (i === 2) { %>
+    <div class="featured-tag">Popular</div>
+    <% } %>
     <div class="plan-card-head">
       <div class="plan-label"><%= p.label %></div>
       <div class="plan-rate"><%= p.daily_percent %><span class="plan-rate-unit">%</span></div>
@@ -29,7 +39,7 @@
       <div class="plan-row"><span class="pr-key">Payouts</span><span class="pr-val">⚡ Instant</span></div>
     </div>
     <div class="plan-card-foot">
-      <form action="/dashboard/invest" method="POST" id="form-plan-<%= p.id %>">
+      <form action="<%= (locals.req && req.query.reinvest) ? '/dashboard/invest/reinvest' : '/dashboard/invest' %>" method="POST" id="form-plan-<%= p.id %>">
         <input type="hidden" name="plan_id" value="<%= p.id %>">
         <div class="form-group" style="margin-bottom:12px;">
           <label class="form-label" style="font-size:.78rem;">Amount (USD)</label>

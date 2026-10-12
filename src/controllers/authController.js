@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { getDb } = require('../models/database');
 const { generateReferralCode } = require('../helpers/format');
+const mailer = require('../services/email');
 
 exports.getLogin = (req, res) => {
   res.render('auth/login', { title: 'Login', errors: req.flash('error'), success: req.flash('success') });
@@ -80,6 +81,7 @@ exports.postRegister = async (req, res) => {
   }
 
   req.session.userId = result.lastInsertRowid;
+  mailer.sendWelcome(email.toLowerCase().trim(), full_name.trim()).catch(() => {});
   res.redirect('/dashboard');
 };
 

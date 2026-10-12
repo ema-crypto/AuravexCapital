@@ -13,8 +13,11 @@
     </div>
     <div class="plans-grid">
       <% plans.forEach((p, i) => { %>
-      <div class="plan-card <%= i === 2 ? 'featured' : '' %>">
-        <% if (i === 2) { %><div class="featured-tag">Popular</div><% } %>
+      <div class="plan-card <%= p.is_promo ? 'featured' : (i === 2 ? 'featured' : '') %>"
+           style="<%= p.is_promo ? 'border-color:#ef4444;' : '' %>">
+        <% if (p.is_promo) { %>
+        <div class="featured-tag" style="background:#ef4444;">🔥 Limited Time</div>
+        <% } else if (i === 2) { %><div class="featured-tag">Popular</div><% } %>
         <div class="plan-card-head">
           <div class="plan-label"><%= p.label %></div>
           <div class="plan-rate"><%= p.daily_percent %><span class="plan-rate-unit">%</span></div>

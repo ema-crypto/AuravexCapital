@@ -53,6 +53,11 @@
       <a href="/dashboard/profile" class="nav-item <%= title === 'Profile' ? 'active' : '' %>">
         <span class="nav-icon">👤</span> Profile
       </a>
+      <a href="/dashboard/kyc" class="nav-item <%= title === 'KYC Verification' ? 'active' : '' %>">
+        <span class="nav-icon">🪪</span> KYC Verification
+        <% if (authUser.kyc_status === 'none' || !authUser.kyc_status) { %><span style="background:#ef4444;color:#fff;font-size:.6rem;padding:1px 6px;border-radius:10px;margin-left:auto;">!</span><% } %>
+        <% if (authUser.kyc_status === 'approved') { %><span style="color:var(--emerald-500);margin-left:auto;font-size:.75rem;">✓</span><% } %>
+      </a>
     </nav>
 
     <div class="sidebar-footer">

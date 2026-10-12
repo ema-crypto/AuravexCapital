@@ -4,6 +4,7 @@
 </div>
 
 <% if (locals.success && success.length) { %><div class="alert alert-success">✅ <%= success[0] %></div><% } %>
+<% if (locals.errors && errors.length) { %><div class="alert alert-error">⚠️ <%= errors[0] %></div><% } %>
 
 <%
 // Build a JS map of network → address for client-side switching
@@ -49,10 +50,30 @@ const firstWallet = (depositWallets || [])[0];
       <div class="deposit-address-box" id="deposit-address-box">
         <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:6px;">Send <strong id="deposit-network"><%= firstWallet ? firstWallet.label : '' %></strong> to this address:</div>
         <div class="dab-address" id="deposit-address"><%= firstWallet ? firstWallet.address : 'Contact support for your deposit address' %></div>
-        <p style="font-size:.78rem;color:var(--text-muted);">
-          ⚠️ Only send the selected cryptocurrency to this address.<br>
-          Your balance updates automatically after blockchain confirmation.
+        <button type="button" onclick="copyAddr()" style="margin-top:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);padding:6px 14px;border-radius:6px;font-size:.78rem;cursor:pointer;" id="copy-btn">📋 Copy Address</button>
+        <p style="font-size:.78rem;color:var(--text-muted);margin-top:8px;">
+          ⚠️ Only send the selected cryptocurrency to this address.
         </p>
+      </div>
+
+      <!-- Confirm Payment -->
+      <div class="form-card" style="margin-top:20px;">
+        <h4 style="margin-bottom:4px;">Confirm Your Payment</h4>
+        <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:16px;">After sending, submit your payment details so we can credit your account faster.</p>
+        <form action="/dashboard/deposit/confirm" method="POST" id="confirm-form">
+          <input type="hidden" name="coin" id="confirm-coin" value="<%= firstWallet ? firstWallet.network : '' %>">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+              <label class="form-label">Amount Sent (USD)</label>
+              <input type="number" name="amount" class="form-control" placeholder="e.g. 500" min="1" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Transaction Hash <span style="color:var(--text-muted);font-weight:400;">(optional)</span></label>
+              <input type="text" name="txn_hash" class="form-control" placeholder="Paste your TX ID">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-gold btn-block" style="margin-top:4px;">✅ I've Sent Payment</button>
+        </form>
       </div>
     </div>
   </div>
@@ -106,7 +127,17 @@ document.querySelectorAll('.crypto-opt').forEach(opt => {
     if (w) {
       document.getElementById('deposit-network').textContent = w.label;
       document.getElementById('deposit-address').textContent = w.address;
+      document.getElementById('confirm-coin').value = network;
     }
   });
 });
+
+function copyAddr() {
+  const addr = document.getElementById('deposit-address').textContent;
+  navigator.clipboard.writeText(addr).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✅ Copied!';
+    setTimeout(() => { btn.textContent = '📋 Copy Address'; }, 2000);
+  });
+}
 </script>

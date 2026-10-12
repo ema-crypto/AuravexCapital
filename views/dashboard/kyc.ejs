@@ -1,0 +1,179 @@
+<div class="dash-page-title">
+  <h1>KYC Verification</h1>
+  <p>Verify your identity to unlock full withdrawal access</p>
+</div>
+
+<% if (locals.errors && errors.length) { %><div class="alert alert-error">⚠️ <%= errors[0] %></div><% } %>
+<% if (locals.success && success.length) { %><div class="alert alert-success">✅ <%= success[0] %></div><% } %>
+
+<%
+const kycStatus = user.kyc_status || 'none';
+const statusMap = {
+  none:     { label: 'Not Submitted',  color: 'var(--text-muted)', icon: '📋' },
+  pending:  { label: 'Under Review',   color: '#f59e0b',           icon: '⏳' },
+  approved: { label: 'Verified',       color: 'var(--emerald-500)',icon: '✅' },
+  rejected: { label: 'Rejected',       color: 'var(--red-500)',    icon: '❌' },
+};
+const st = statusMap[kycStatus] || statusMap.none;
+%>
+
+<!-- Status banner -->
+<div class="data-card" style="margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+  <div style="font-size:2rem;"><%= st.icon %></div>
+  <div>
+    <div style="font-size:.78rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">KYC Status</div>
+    <div style="font-size:1.1rem;font-weight:700;color:<%= st.color %>;"><%= st.label %></div>
+    <% if (submission && submission.status === 'rejected' && submission.rejection_reason) { %>
+    <div style="margin-top:4px;font-size:.85rem;color:var(--red-500);">Reason: <%= submission.rejection_reason %></div>
+    <% } %>
+  </div>
+  <% if (kycStatus === 'approved') { %>
+  <div style="margin-left:auto;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);padding:10px 18px;border-radius:8px;font-size:.85rem;color:var(--emerald-500);font-weight:600;">
+    🎉 Full access unlocked
+  </div>
+  <% } %>
+</div>
+
+<% if (kycStatus === 'approved') { %>
+<div class="data-card" style="text-align:center;padding:40px;">
+  <div style="font-size:3rem;margin-bottom:12px;">🏆</div>
+  <h3 style="margin-bottom:8px;">Your identity is verified</h3>
+  <p style="color:var(--text-muted);">No further action needed. You have full access to all platform features.</p>
+</div>
+
+<% } else if (kycStatus === 'pending') { %>
+<div class="data-card" style="text-align:center;padding:40px;">
+  <div style="font-size:3rem;margin-bottom:12px;">⏳</div>
+  <h3 style="margin-bottom:8px;">Under Review</h3>
+  <p style="color:var(--text-muted);">Our team is reviewing your documents. This typically takes 1–3 business days.</p>
+  <% if (submission) { %>
+  <p style="margin-top:8px;font-size:.8rem;color:var(--text-muted);">Submitted: <%= new Date(submission.submitted_at).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' }) %></p>
+  <% } %>
+</div>
+
+<% } else { %>
+<!-- Submission form -->
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;">
+  <div class="form-card">
+    <h3 style="margin-bottom:4px;">Submit Your Documents</h3>
+    <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:24px;">All information is encrypted and used solely for identity verification.</p>
+
+    <form action="/dashboard/kyc" method="POST" enctype="multipart/form-data">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Document Type</label>
+          <select name="doc_type" class="form-control" required>
+            <option value="">— Select —</option>
+            <option value="Passport">Passport</option>
+            <option value="National ID">National ID Card</option>
+            <option value="Driver's License">Driver's License</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Document Number</label>
+          <input type="text" name="doc_number" class="form-control" placeholder="e.g. A12345678" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" name="dob" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Country of Issue</label>
+          <input type="text" name="country_of_issue" class="form-control" placeholder="e.g. Nigeria" required>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <div class="form-group">
+          <label class="form-label">Front of Document <span style="color:var(--red-500);">*</span></label>
+          <label class="kyc-upload-box" for="front_image">
+            <input type="file" id="front_image" name="front_image" accept="image/*" required style="display:none;" onchange="previewFile(this,'prev_front')">
+            <img id="prev_front" src="" style="display:none;width:100%;border-radius:6px;object-fit:cover;max-height:120px;">
+            <div id="front_placeholder">
+              <div style="font-size:1.8rem;margin-bottom:6px;">🪪</div>
+              <div style="font-size:.78rem;color:var(--text-muted);">Click to upload<br>JPG, PNG, max 3MB</div>
+            </div>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Back of Document</label>
+          <label class="kyc-upload-box" for="back_image">
+            <input type="file" id="back_image" name="back_image" accept="image/*" style="display:none;" onchange="previewFile(this,'prev_back')">
+            <img id="prev_back" src="" style="display:none;width:100%;border-radius:6px;object-fit:cover;max-height:120px;">
+            <div id="back_placeholder">
+              <div style="font-size:1.8rem;margin-bottom:6px;">🪪</div>
+              <div style="font-size:.78rem;color:var(--text-muted);">Click to upload<br>Optional</div>
+            </div>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Selfie with Document <span style="color:var(--red-500);">*</span></label>
+          <label class="kyc-upload-box" for="selfie_image">
+            <input type="file" id="selfie_image" name="selfie_image" accept="image/*" required style="display:none;" onchange="previewFile(this,'prev_selfie')">
+            <img id="prev_selfie" src="" style="display:none;width:100%;border-radius:6px;object-fit:cover;max-height:120px;">
+            <div id="selfie_placeholder">
+              <div style="font-size:1.8rem;margin-bottom:6px;">🤳</div>
+              <div style="font-size:.78rem;color:var(--text-muted);">Face clearly visible<br>holding document</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <% if (kycStatus === 'rejected') { %>
+      <div class="alert alert-error" style="margin-top:16px;">
+        Your previous submission was rejected. Please re-submit with clearer documents.
+      </div>
+      <% } %>
+
+      <button type="submit" class="btn btn-gold btn-block" style="margin-top:20px;">Submit for Verification</button>
+    </form>
+  </div>
+
+  <div>
+    <div class="form-card" style="margin-bottom:16px;">
+      <h4 style="margin-bottom:12px;">Why KYC?</h4>
+      <ul style="padding-left:18px;font-size:.85rem;color:var(--text-muted);line-height:1.8;">
+        <li>Required for withdrawals over $500</li>
+        <li>Protects your account from fraud</li>
+        <li>Complies with AML regulations</li>
+        <li>Unlocks higher investment tiers</li>
+      </ul>
+    </div>
+    <div class="form-card">
+      <h4 style="margin-bottom:12px;">Tips for Approval</h4>
+      <ul style="padding-left:18px;font-size:.85rem;color:var(--text-muted);line-height:1.8;">
+        <li>Ensure documents are clearly readable</li>
+        <li>No glare or shadows on images</li>
+        <li>Hold document next to your face for selfie</li>
+        <li>All corners of document must be visible</li>
+        <li>Review typically takes 1–3 business days</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<style>
+.kyc-upload-box {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:2px dashed var(--border);border-radius:10px;padding:16px;min-height:140px;
+  cursor:pointer;transition:.2s;text-align:center;
+}
+.kyc-upload-box:hover { border-color:var(--gold-500);background:rgba(201,162,39,.05); }
+</style>
+
+<script>
+function previewFile(input, previewId) {
+  const preview = document.getElementById(previewId);
+  const placeholder = input.parentNode.querySelector('[id$="_placeholder"]');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+</script>

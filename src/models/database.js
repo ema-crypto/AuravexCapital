@@ -117,6 +117,22 @@ function initSchema() {
       value TEXT NOT NULL,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS kyc_submissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      doc_type TEXT NOT NULL,
+      doc_number TEXT NOT NULL,
+      dob TEXT NOT NULL,
+      country_of_issue TEXT NOT NULL,
+      front_image BLOB,
+      back_image BLOB,
+      selfie_image BLOB,
+      status TEXT DEFAULT 'pending',
+      rejection_reason TEXT,
+      submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      reviewed_at DATETIME
+    );
   `);
 
   // Run migrations for existing DBs (add columns if missing)
@@ -128,25 +144,44 @@ function initSchema() {
 }
 
 function runMigrations() {
-  // Add is_admin and is_suspended if they don't exist
-  const cols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
-  if (!cols.includes('is_admin'))     db.exec("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0");
-  if (!cols.includes('is_suspended')) db.exec("ALTER TABLE users ADD COLUMN is_suspended INTEGER DEFAULT 0");
+  const userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+  if (!userCols.includes('is_admin'))     db.exec("ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0");
+  if (!userCols.includes('is_suspended')) db.exec("ALTER TABLE users ADD COLUMN is_suspended INTEGER DEFAULT 0");
+  if (!userCols.includes('kyc_status'))   db.exec("ALTER TABLE users ADD COLUMN kyc_status TEXT DEFAULT 'none'");
+
+  const planCols = db.prepare("PRAGMA table_info(plans)").all().map(c => c.name);
+  if (!planCols.includes('is_promo')) db.exec("ALTER TABLE plans ADD COLUMN is_promo INTEGER DEFAULT 0");
 }
 
 function seedPlans() {
   const count = db.prepare('SELECT COUNT(*) as c FROM plans').get();
-  if (count.c > 0) return;
 
-  const insert = db.prepare(`
-    INSERT INTO plans (name, label, daily_percent, term_days, min_amount, max_amount, deposit_returned, sort_order)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `);
+  const plans = [
+    { name: 'Starter Plan',  label: 'STARTER',  daily_percent: 4.5, term_days: 7,  min_amount: 50,    max_amount: 499,  deposit_returned: 1, is_promo: 0, sort_order: 1 },
+    { name: 'Velocity Plan', label: 'VELOCITY', daily_percent: 7,   term_days: 10, min_amount: 500,   max_amount: 2499, deposit_returned: 0, is_promo: 0, sort_order: 2 },
+    { name: 'Apex Plan',     label: 'APEX',     daily_percent: 11,  term_days: 14, min_amount: 2500,  max_amount: 9999, deposit_returned: 0, is_promo: 0, sort_order: 3 },
+    { name: 'Titan Plan',    label: 'TITAN',    daily_percent: 16,  term_days: 21, min_amount: 10000, max_amount: null, deposit_returned: 0, is_promo: 0, sort_order: 4 },
+    { name: 'Flash Promo',   label: 'PROMO',    daily_percent: 22,  term_days: 3,  min_amount: 100,   max_amount: 1500, deposit_returned: 1, is_promo: 1, sort_order: 5 },
+  ];
 
-  insert.run('Start Plan',   'START',   6,  5,   50,    500,  1, 1);
-  insert.run('Basic Plan',   'BASIC',   8,  7,  500,   1000,  0, 2);
-  insert.run('Silver Plan',  'SILVER',  12, 9,  1000,  4000,  0, 3);
-  insert.run('Premium Plan', 'PREMIUM', 16, 11, 4000,  null,  0, 4);
+  if (count.c === 0) {
+    const insert = db.prepare(`
+      INSERT INTO plans (name, label, daily_percent, term_days, min_amount, max_amount, deposit_returned, is_promo, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    plans.forEach(p => insert.run(p.name, p.label, p.daily_percent, p.term_days, p.min_amount, p.max_amount, p.deposit_returned, p.is_promo, p.sort_order));
+  } else {
+    // Update existing plans to new values (preserves IDs for FK integrity)
+    const upd = db.prepare(`UPDATE plans SET name=?, label=?, daily_percent=?, term_days=?, min_amount=?, max_amount=?, deposit_returned=?, is_promo=?, sort_order=? WHERE sort_order=?`);
+    plans.forEach(p => upd.run(p.name, p.label, p.daily_percent, p.term_days, p.min_amount, p.max_amount, p.deposit_returned, p.is_promo, p.sort_order, p.sort_order));
+    // Add promo plan if not present
+    const promoExists = db.prepare("SELECT id FROM plans WHERE is_promo = 1").get();
+    if (!promoExists) {
+      const promo = plans[4];
+      db.prepare(`INSERT INTO plans (name, label, daily_percent, term_days, min_amount, max_amount, deposit_returned, is_promo, sort_order) VALUES (?,?,?,?,?,?,?,?,?)`)
+        .run(promo.name, promo.label, promo.daily_percent, promo.term_days, promo.min_amount, promo.max_amount, promo.deposit_returned, promo.is_promo, promo.sort_order);
+    }
+  }
 }
 
 function seedDepositWallets() {
@@ -199,4 +234,8 @@ function getSetting(key) {
   return row ? row.value : null;
 }
 
-module.exports = { getDb, getSetting };
+function getKycSubmission(userId) {
+  return db.prepare('SELECT * FROM kyc_submissions WHERE user_id = ? ORDER BY submitted_at DESC LIMIT 1').get(userId);
+}
+
+module.exports = { getDb, getSetting, getKycSubmission };
