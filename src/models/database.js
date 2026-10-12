@@ -151,6 +151,13 @@ function runMigrations() {
 
   const planCols = db.prepare("PRAGMA table_info(plans)").all().map(c => c.name);
   if (!planCols.includes('is_promo')) db.exec("ALTER TABLE plans ADD COLUMN is_promo INTEGER DEFAULT 0");
+
+  // Add BNB if not already in deposit_wallets
+  const bnbExists = db.prepare("SELECT id FROM deposit_wallets WHERE network = 'BNB'").get();
+  if (!bnbExists) {
+    db.prepare(`INSERT INTO deposit_wallets (network, symbol, address, label, sort_order) VALUES (?, ?, ?, ?, ?)`)
+      .run('BNB', 'BNB', '0x71C7656EC7ab88b098defB751B7401B5f6d8976F', 'BNB Smart Chain', 10);
+  }
 }
 
 function seedPlans() {
@@ -203,6 +210,7 @@ function seedDepositWallets() {
   insert.run('TRX',        'TRX',  'TXFBqBbqJommqZf67GQFGAnrisNQGGZhh5',           'Tron',            7);
   insert.run('XRP',        'XRP',  'rN7n3473SaZBCG4dFL83w7PB5AMgGCgyQE',           'Ripple',          8);
   insert.run('DASH',       'DASH', 'XpESxaUmonkq8RaLLp46Brx2K39ggQe226',           'Dash',            9);
+  insert.run('BNB',        'BNB',  '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',  'BNB Smart Chain', 10);
 }
 
 function seedAdmin() {
