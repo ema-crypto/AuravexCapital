@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { queryOne, run } = require('../models/database');
 const { generateReferralCode } = require('../helpers/format');
 const mailer = require('../services/email');
@@ -63,9 +64,19 @@ exports.postRegister = async (req, res) => {
     }
   }
 
+  const verifyToken = crypto.randomBytes(32).toString('hex');
+  const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await run('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?', [verifyToken, verifyExpires, newId]);
+
+  const siteUrl = process.env.SITE_URL || 'https://auravexcapital.ltd';
+  mailer.sendVerificationEmail(
+    email.toLowerCase().trim(),
+    full_name.trim(),
+    `${siteUrl}/verify-email?token=${verifyToken}`
+  ).catch(() => {});
+
   req.session.userId = newId;
-  mailer.sendWelcome(email.toLowerCase().trim(), full_name.trim()).catch(() => {});
-  res.redirect('/dashboard');
+  res.redirect('/verify-email-notice');
 };
 
 exports.getForgotPassword = (req, res) => {
@@ -79,4 +90,55 @@ exports.postForgotPassword = (req, res) => {
 
 exports.logout = (req, res) => {
   req.session.destroy(() => res.redirect('/'));
+};
+
+exports.getVerifyEmailNotice = (req, res) => {
+  res.render('auth/verify-email-notice', {
+    title: 'Verify Your Email',
+    success: req.flash('success'),
+    errors: req.flash('error'),
+  });
+};
+
+exports.getVerifyEmail = async (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    req.flash('error', 'Invalid verification link.');
+    return res.redirect('/login');
+  }
+  const user = await queryOne('SELECT * FROM users WHERE verification_token = ?', [token]);
+  if (!user) {
+    req.flash('error', 'Verification link is invalid or has already been used.');
+    return res.redirect('/login');
+  }
+  if (new Date(user.verification_expires) < new Date()) {
+    req.flash('error', 'Verification link has expired. Please request a new one.');
+    return res.redirect(req.session.userId ? '/dashboard' : '/login');
+  }
+  await run(
+    'UPDATE users SET email_verified = 1, verification_token = NULL, verification_expires = NULL WHERE id = ?',
+    [user.id]
+  );
+  if (req.session.userId) {
+    req.flash('success', 'Email verified! You can now start investing.');
+    return res.redirect('/dashboard');
+  }
+  req.flash('success', 'Email verified! Please log in to continue.');
+  res.redirect('/login');
+};
+
+exports.postResendVerification = async (req, res) => {
+  const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
+  if (!user) return res.redirect('/login');
+  if (user.email_verified) {
+    req.flash('success', 'Your email is already verified.');
+    return res.redirect('/dashboard');
+  }
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  await run('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?', [token, expires, user.id]);
+  const siteUrl = process.env.SITE_URL || 'https://auravexcapital.ltd';
+  mailer.sendVerificationEmail(user.email, user.full_name, `${siteUrl}/verify-email?token=${token}`).catch(() => {});
+  req.flash('success', 'Verification email resent! Check your inbox.');
+  res.redirect('/dashboard');
 };

@@ -39,7 +39,7 @@ function wrap(body) {
   </td></tr>
   <tr><td style="padding:32px;color:#e4e9f0;">${body}</td></tr>
   <tr><td style="padding:16px 32px;border-top:1px solid #1e2535;font-size:.75rem;color:#5a6478;text-align:center;">
-    © 2025 AuravexCapital &nbsp;·&nbsp; <a href="mailto:support@auravexcapital.ltd" style="color:#c9a227;">support@auravexcapital.ltd</a>
+    © 2026 AuravexCapital &nbsp;·&nbsp; <a href="mailto:support@auravexcapital.ltd" style="color:#c9a227;">support@auravexcapital.ltd</a>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -51,6 +51,19 @@ function btn(text, url) {
 function detail(label, val) {
   return `<tr><td style="padding:8px 0;color:#8892a4;font-size:.85rem;">${label}</td><td style="padding:8px 0;color:#e4e9f0;font-weight:600;text-align:right;">${val}</td></tr>`;
 }
+
+exports.sendVerificationEmail = (to, name, verifyUrl) => sendMail({
+  to, subject: 'Verify your AuravexCapital email address',
+  html: wrap(`
+    <h2 style="color:#c9a227;margin:0 0 12px;">Welcome, ${name}!</h2>
+    <p style="margin:0 0 16px;line-height:1.6;">Your account is ready — just verify your email to unlock investing.</p>
+    <div style="background:#161b2e;border-radius:8px;padding:20px;margin-bottom:20px;border-left:3px solid #c9a227;">
+      <p style="margin:0 0 8px;font-size:.85rem;color:#8892a4;">Click the button below to verify. This link expires in <strong style="color:#c9a227;">24 hours</strong>.</p>
+    </div>
+    ${btn('Verify Email Address →', verifyUrl)}
+    <p style="margin:20px 0 0;font-size:.8rem;color:#5a6478;">If you didn't create this account, you can safely ignore this email.</p>
+  `),
+});
 
 exports.sendWelcome = (to, name) => sendMail({
   to, subject: 'Welcome to AuravexCapital 🎉',

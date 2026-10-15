@@ -44,6 +44,10 @@ exports.getInvestments = async (req, res) => {
 
 exports.postInvest = async (req, res) => {
   const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
+  if (!user.email_verified) {
+    req.flash('error', 'Please verify your email address before investing. Check your inbox for the verification link.');
+    return res.redirect('/dashboard');
+  }
   const { plan_id, amount } = req.body;
   const plan = await queryOne('SELECT * FROM plans WHERE id = ? AND is_active = 1', [plan_id]);
   if (!plan) { req.flash('error', 'Invalid plan.'); return res.redirect('/dashboard/plans'); }
@@ -70,6 +74,10 @@ exports.postInvest = async (req, res) => {
 
 exports.postReinvest = async (req, res) => {
   const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
+  if (!user.email_verified) {
+    req.flash('error', 'Please verify your email address before investing. Check your inbox for the verification link.');
+    return res.redirect('/dashboard');
+  }
   const { plan_id, amount } = req.body;
   const plan = await queryOne('SELECT * FROM plans WHERE id = ? AND is_active = 1', [plan_id]);
   if (!plan) { req.flash('error', 'Invalid plan.'); return res.redirect('/dashboard/plans?reinvest=1'); }

@@ -22,6 +22,8 @@ router.post('/register',       requireGuest, auth.postRegister);
 router.get('/forgot-password', requireGuest, auth.getForgotPassword);
 router.post('/forgot-password',requireGuest, auth.postForgotPassword);
 router.get('/logout', auth.logout);
+router.get('/verify-email-notice', auth.getVerifyEmailNotice);
+router.get('/verify-email',        auth.getVerifyEmail);
 
 // Dashboard (protected)
 router.get('/dashboard',                    requireAuth, dash.getDashboard);
@@ -41,6 +43,9 @@ router.get('/dashboard/referrals',          requireAuth, dash.getReferrals);
 router.get('/dashboard/profile',            requireAuth, dash.getProfile);
 router.post('/dashboard/profile',           requireAuth, dash.postUpdateProfile);
 router.post('/dashboard/profile/password',  requireAuth, dash.postChangePassword);
+
+// Email verification
+router.post('/dashboard/resend-verification', requireAuth, auth.postResendVerification);
 
 // Cron
 router.get('/api/cron/earnings', cron.processEarnings);

@@ -95,6 +95,15 @@
       </div>
     </div>
 
+    <% if (authUser && !authUser.email_verified) { %>
+    <div style="background:linear-gradient(135deg,#d97706,#f59e0b);color:#0a0e1a;padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.85rem;font-weight:500;">
+      <span>⚠️ Your email is not verified. Verify it to unlock investing.</span>
+      <form method="POST" action="/dashboard/resend-verification" style="margin:0;">
+        <button type="submit" style="background:#0a0e1a;color:#f0cc6a;border:none;padding:5px 14px;border-radius:5px;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;">Resend Email</button>
+      </form>
+    </div>
+    <% } %>
+
     <div class="dash-content">
       <%- body %>
     </div>
