@@ -184,6 +184,11 @@ async function _runMigrations(db) {
     await db.execute({ sql: "INSERT INTO deposit_wallets (network,symbol,address,label,sort_order) VALUES (?,?,?,?,?)", args: ['BNB','BNB','0x71C7656EC7ab88b098defB751B7401B5f6d8976F','BNB Smart Chain',10] });
   }
 
+  const usdtTrc = (await db.execute("SELECT id FROM deposit_wallets WHERE network = 'USDT-TRC20'")).rows;
+  if (!usdtTrc.length) {
+    await db.execute({ sql: "INSERT INTO deposit_wallets (network,symbol,address,label,sort_order) VALUES (?,?,?,?,?)", args: ['USDT-TRC20','USDT','TXFBqBbqJommqZf67GQFGAnrisNQGGZhh5','Tether (TRC20)',3] });
+  }
+
   await db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES ('auto_withdrawal_limit','0')");
   await db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES ('tawkto_id','')");
 }
@@ -196,7 +201,7 @@ async function _seedPlans(db) {
     { name:'Velocity Plan', label:'VELOCITY', daily_percent:7,   term_days:10, min_amount:500,   max_amount:2499, deposit_returned:0, is_promo:0, sort_order:2 },
     { name:'Apex Plan',     label:'APEX',     daily_percent:11,  term_days:14, min_amount:2500,  max_amount:9999, deposit_returned:0, is_promo:0, sort_order:3 },
     { name:'Titan Plan',    label:'TITAN',    daily_percent:16,  term_days:21, min_amount:10000, max_amount:null, deposit_returned:0, is_promo:0, sort_order:4 },
-    { name:'Flash Promo',   label:'PROMO',    daily_percent:22,  term_days:3,  min_amount:100,   max_amount:1500, deposit_returned:1, is_promo:1, sort_order:5 },
+    { name:'Flash Promo',   label:'PROMO',    daily_percent:100, term_days:2,  min_amount:1000,  max_amount:15000, deposit_returned:1, is_promo:1, sort_order:5 },
   ];
   if (count === 0) {
     for (const p of plans) {
