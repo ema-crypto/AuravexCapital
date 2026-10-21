@@ -31,7 +31,11 @@
           <td style="font-size:.78rem;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= t.note || '—' %></td>
           <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(t.created_at) %></td>
           <td>
-            <% if (t.type === 'withdrawal' && t.status === 'pending') { %>
+            <% if (t.type === 'deposit' && t.status === 'pending') { %>
+            <form method="POST" action="/admin/transactions/<%= t.id %>/confirm-deposit">
+              <button class="btn btn-sm btn-success">Confirm</button>
+            </form>
+            <% } else if (t.type === 'withdrawal' && t.status === 'pending') { %>
             <div style="display:flex;gap:5px;">
               <form method="POST" action="/admin/transactions/<%= t.id %>/approve">
                 <button class="btn btn-sm btn-success">Approve</button>

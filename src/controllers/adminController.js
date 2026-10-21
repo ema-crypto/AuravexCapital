@@ -126,6 +126,16 @@ exports.rejectKyc = async (req, res) => {
   res.redirect(req.headers.referer || '/admin/users');
 };
 
+exports.confirmDeposit = async (req, res) => {
+  const txn = await queryOne("SELECT * FROM transactions WHERE id=? AND type='deposit' AND status='pending'", [req.params.txnId]);
+  if (txn) {
+    await run("UPDATE transactions SET status='completed' WHERE id=?", [txn.id]);
+    await run('UPDATE users SET balance = balance + ?, total_deposited = total_deposited + ? WHERE id = ?', [txn.amount, txn.amount, txn.user_id]);
+  }
+  req.flash('success', 'Deposit confirmed and user balance updated.');
+  res.redirect(req.headers.referer || '/admin/transactions');
+};
+
 exports.approveWithdrawal = async (req, res) => {
   await run("UPDATE transactions SET status='completed' WHERE id=? AND type='withdrawal'", [req.params.txnId]);
   req.flash('success', 'Withdrawal marked as completed.');

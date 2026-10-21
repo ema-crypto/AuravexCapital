@@ -23,9 +23,10 @@ router.post('/kyc/:submissionId/approve', requireAdmin, admin.approveKyc);
 router.post('/kyc/:submissionId/reject',  requireAdmin, admin.rejectKyc);
 
 // Transactions
-router.get('/transactions',                 requireAdmin, admin.getTransactions);
-router.post('/transactions/:txnId/approve', requireAdmin, admin.approveWithdrawal);
-router.post('/transactions/:txnId/reject',  requireAdmin, admin.rejectWithdrawal);
+router.get('/transactions',                        requireAdmin, admin.getTransactions);
+router.post('/transactions/:txnId/confirm-deposit',requireAdmin, admin.confirmDeposit);
+router.post('/transactions/:txnId/approve',        requireAdmin, admin.approveWithdrawal);
+router.post('/transactions/:txnId/reject',         requireAdmin, admin.rejectWithdrawal);
 
 // Deposit Wallets
 router.get('/wallets',      requireAdmin, admin.getWallets);
