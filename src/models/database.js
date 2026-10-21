@@ -220,8 +220,6 @@ async function _seedPlans(db) {
 }
 
 async function _seedDepositWallets(db) {
-  const { rows } = await db.execute('SELECT COUNT(*) as c FROM deposit_wallets');
-  if (Number(rows[0].c) > 0) return;
   const wallets = [
     ['BTC','BTC','bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh','Bitcoin',1],
     ['ETH','ETH','0x71C7656EC7ab88b098defB751B7401B5f6d8976F','Ethereum',2],
@@ -235,7 +233,7 @@ async function _seedDepositWallets(db) {
     ['BNB','BNB','0x71C7656EC7ab88b098defB751B7401B5f6d8976F','BNB Smart Chain',10],
   ];
   for (const w of wallets) {
-    await db.execute({ sql:'INSERT INTO deposit_wallets (network,symbol,address,label,sort_order) VALUES (?,?,?,?,?)', args: w });
+    await db.execute({ sql:'INSERT OR IGNORE INTO deposit_wallets (network,symbol,address,label,sort_order) VALUES (?,?,?,?,?)', args: w });
   }
 }
 

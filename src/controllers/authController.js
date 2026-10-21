@@ -48,7 +48,7 @@ exports.postRegister = async (req, res) => {
 
   const result = await run(
     'INSERT INTO users (full_name,email,password,country,referral_code,referred_by) VALUES (?,?,?,?,?,?)',
-    [full_name.trim(), email.toLowerCase().trim(), hash, country || 'Nigeria', referralCode, referredBy]
+    [full_name.trim(), email.toLowerCase().trim(), hash, country || 'United Kingdom', referralCode, referredBy]
   );
   const newId = result.lastInsertRowid;
 
