@@ -15,7 +15,7 @@
   <div class="a-table-wrap">
     <table class="a-table">
       <thead>
-        <tr><th>User</th><th>Type</th><th>Amount</th><th>Status</th><th>Ref</th><th>Note</th><th>Date</th><th>Actions</th></tr>
+        <tr><th>User</th><th>Type</th><th>Amount</th><th>Currency</th><th>Wallet / Address</th><th>Status</th><th>Ref</th><th>Date</th><th>Actions</th></tr>
       </thead>
       <tbody>
         <% transactions.forEach(t => { %>
@@ -26,9 +26,22 @@
           </td>
           <td><span class="badge <%= t.type === 'deposit' ? 'badge-green' : t.type === 'withdrawal' ? 'badge-gold' : t.type === 'earning' ? 'badge-blue' : 'badge-gray' %>"><%= t.type %></span></td>
           <td style="font-weight:600;">$<%= Number(t.amount).toFixed(2) %></td>
+          <td style="font-size:.8rem;color:var(--text-muted);"><%= t.currency || '—' %></td>
+          <td style="font-size:.73rem;max-width:160px;">
+            <% if (t.wallet_address) { %>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;color:var(--text-muted);" title="<%= t.wallet_address %>"><%= t.wallet_address %></span>
+              <button onclick="copyAddr(this,'<%= t.wallet_address %>')" title="Copy address"
+                style="background:none;border:1px solid var(--border);border-radius:4px;padding:2px 6px;font-size:.65rem;color:var(--text-muted);cursor:pointer;flex-shrink:0;">
+                Copy
+              </button>
+            </div>
+            <% } else { %>
+            <span style="color:var(--text-muted);">—</span>
+            <% } %>
+          </td>
           <td><span class="badge <%= t.status === 'completed' ? 'badge-green' : t.status === 'pending' ? 'badge-gold' : 'badge-red' %>"><%= t.status %></span></td>
           <td style="font-size:.73rem;color:var(--text-muted);"><%= t.txn_ref || '—' %></td>
-          <td style="font-size:.78rem;color:var(--text-muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= t.note || '—' %></td>
           <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(t.created_at) %></td>
           <td>
             <% if (t.type === 'deposit' && t.status === 'pending') { %>
@@ -51,9 +64,27 @@
         </tr>
         <% }) %>
         <% if (!transactions.length) { %>
-        <tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:32px;">No transactions found</td></tr>
+        <tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:32px;">No transactions found</td></tr>
         <% } %>
       </tbody>
     </table>
   </div>
 </div>
+
+<script>
+function copyAddr(btn, addr) {
+  navigator.clipboard.writeText(addr).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = 'var(--success)';
+    btn.style.borderColor = 'var(--success)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+  }).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = addr; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+</script>

@@ -80,6 +80,21 @@ exports.sendWelcome = (to, name) => sendMail({
   `),
 });
 
+exports.notifyAdmin = (subject, title, rows, link) => {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) return Promise.resolve();
+  const rowHtml = rows.map(([k, v]) => detail(k, v)).join('');
+  const siteUrl = process.env.SITE_URL || SITE;
+  return sendMail({
+    to: adminEmail, subject,
+    html: wrap(`
+      <h2 style="color:#c9a227;margin:0 0 12px;">${title}</h2>
+      <table width="100%" style="border:1px solid #1e2535;border-radius:8px;padding:16px;background:#161b2e;border-collapse:separate;">${rowHtml}</table>
+      ${link ? btn('View in Admin →', siteUrl + link) : ''}
+    `),
+  });
+};
+
 exports.sendDepositPending = (to, name, amount, coin, txnRef) => sendMail({
   to, subject: '📥 Deposit Received – Under Review',
   html: wrap(`
@@ -95,6 +110,22 @@ exports.sendDepositPending = (to, name, amount, coin, txnRef) => sendMail({
   `),
 });
 
+exports.sendDepositConfirmed = (to, name, amount, coin, txnRef) => sendMail({
+  to, subject: '✅ Deposit Confirmed – Balance Updated',
+  html: wrap(`
+    <h2 style="color:#c9a227;margin:0 0 12px;">Deposit Confirmed!</h2>
+    <p style="margin:0 0 16px;">Hi ${name}, your deposit has been verified and your balance has been updated.</p>
+    <table width="100%" style="border:1px solid #1e2535;border-radius:8px;padding:16px;background:#161b2e;border-collapse:separate;">
+      ${detail('Amount', `$${parseFloat(amount).toFixed(2)}`)}
+      ${detail('Coin / Network', coin)}
+      ${detail('Reference', txnRef)}
+      ${detail('Status', '<span style="color:#10b981;font-weight:700;">Confirmed ✓</span>')}
+    </table>
+    <p style="margin:16px 0 0;font-size:.85rem;color:#8892a4;">Your balance is ready. Visit your dashboard to start investing.</p>
+    ${btn('Go to Dashboard →', `${SITE}/dashboard`)}
+  `),
+});
+
 exports.sendWithdrawalSubmitted = (to, name, amount, wallet, txnRef) => sendMail({
   to, subject: '📤 Withdrawal Request Submitted',
   html: wrap(`
@@ -107,5 +138,47 @@ exports.sendWithdrawalSubmitted = (to, name, amount, wallet, txnRef) => sendMail
       ${detail('ETA', '1 – 24 hours')}
     </table>
     <p style="margin:16px 0 0;font-size:.85rem;color:#8892a4;">Contact support if you haven't received funds after 24 hours.</p>
+  `),
+});
+
+exports.sendWithdrawalApproved = (to, name, amount, txnRef) => sendMail({
+  to, subject: '✅ Withdrawal Approved – Funds Sent',
+  html: wrap(`
+    <h2 style="color:#c9a227;margin:0 0 12px;">Withdrawal Approved</h2>
+    <p style="margin:0 0 16px;">Hi ${name}, your withdrawal has been approved and funds are on their way.</p>
+    <table width="100%" style="border:1px solid #1e2535;border-radius:8px;padding:16px;background:#161b2e;border-collapse:separate;">
+      ${detail('Amount', `$${parseFloat(amount).toFixed(2)}`)}
+      ${detail('Reference', txnRef)}
+      ${detail('Status', '<span style="color:#10b981;font-weight:700;">Approved & Sent ✓</span>')}
+    </table>
+    <p style="margin:16px 0 0;font-size:.85rem;color:#8892a4;">Funds typically arrive within 1–24 hours. Contact support if you experience delays.</p>
+  `),
+});
+
+exports.sendWithdrawalRejected = (to, name, amount, txnRef) => sendMail({
+  to, subject: '❌ Withdrawal Request Rejected',
+  html: wrap(`
+    <h2 style="color:#f43f5e;margin:0 0 12px;">Withdrawal Rejected</h2>
+    <p style="margin:0 0 16px;">Hi ${name}, unfortunately your withdrawal request could not be processed at this time.</p>
+    <table width="100%" style="border:1px solid #1e2535;border-radius:8px;padding:16px;background:#161b2e;border-collapse:separate;">
+      ${detail('Amount', `$${parseFloat(amount).toFixed(2)}`)}
+      ${detail('Reference', txnRef)}
+      ${detail('Status', '<span style="color:#f43f5e;font-weight:700;">Rejected</span>')}
+    </table>
+    <p style="margin:16px 0 0;font-size:.85rem;color:#8892a4;">Your funds have been returned to your balance. Please contact support for more information.</p>
+    ${btn('Contact Support →', `${SITE}/contact`)}
+  `),
+});
+
+exports.sendChatReply = (to, name, replyMessage) => sendMail({
+  to, subject: '💬 New Reply from AuravexCapital Support',
+  html: wrap(`
+    <h2 style="color:#c9a227;margin:0 0 12px;">Support Reply</h2>
+    <p style="margin:0 0 16px;">Hi ${name}, you have a new reply from our support team.</p>
+    <div style="background:#161b2e;border-radius:8px;padding:20px;margin-bottom:16px;border-left:3px solid #c9a227;">
+      <p style="margin:0;line-height:1.6;color:#e4e9f0;">${replyMessage.replace(/\n/g,'<br>')}</p>
+    </div>
+    ${btn('Open Dashboard →', `${SITE}/dashboard`)}
+    <p style="margin:16px 0 0;font-size:.8rem;color:#5a6478;">You can also reply via the live chat widget on your dashboard.</p>
   `),
 });

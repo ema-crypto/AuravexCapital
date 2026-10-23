@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const { queryOne, query, run } = require('../models/database');
 const { currency, dateStr } = require('../helpers/format');
+const mailer = require('../services/email');
 
 exports.getLogin = (req, res) => {
   res.render('admin/login', { title: 'Admin Login', errors: req.flash('error'), success: req.flash('success') });
@@ -131,13 +132,20 @@ exports.confirmDeposit = async (req, res) => {
   if (txn) {
     await run("UPDATE transactions SET status='completed' WHERE id=?", [txn.id]);
     await run('UPDATE users SET balance = balance + ?, total_deposited = total_deposited + ? WHERE id = ?', [txn.amount, txn.amount, txn.user_id]);
+    const user = await queryOne('SELECT * FROM users WHERE id = ?', [txn.user_id]);
+    if (user) mailer.sendDepositConfirmed(user.email, user.full_name, txn.amount, txn.currency || 'Crypto', txn.txn_ref || '').catch(() => {});
   }
   req.flash('success', 'Deposit confirmed and user balance updated.');
   res.redirect(req.headers.referer || '/admin/transactions');
 };
 
 exports.approveWithdrawal = async (req, res) => {
-  await run("UPDATE transactions SET status='completed' WHERE id=? AND type='withdrawal'", [req.params.txnId]);
+  const txn = await queryOne("SELECT * FROM transactions WHERE id=? AND type='withdrawal' AND status='pending'", [req.params.txnId]);
+  if (txn) {
+    await run("UPDATE transactions SET status='completed' WHERE id=?", [txn.id]);
+    const user = await queryOne('SELECT * FROM users WHERE id = ?', [txn.user_id]);
+    if (user) mailer.sendWithdrawalApproved(user.email, user.full_name, txn.amount, txn.txn_ref || '').catch(() => {});
+  }
   req.flash('success', 'Withdrawal marked as completed.');
   res.redirect(req.headers.referer || '/admin/transactions');
 };
@@ -147,6 +155,8 @@ exports.rejectWithdrawal = async (req, res) => {
   if (txn) {
     await run('UPDATE users SET balance = balance + ? WHERE id = ?', [txn.amount, txn.user_id]);
     await run("UPDATE transactions SET status='failed' WHERE id=?", [txn.id]);
+    const user = await queryOne('SELECT * FROM users WHERE id = ?', [txn.user_id]);
+    if (user) mailer.sendWithdrawalRejected(user.email, user.full_name, txn.amount, txn.txn_ref || '').catch(() => {});
   }
   req.flash('success', 'Withdrawal rejected and amount refunded to user.');
   res.redirect(req.headers.referer || '/admin/transactions');
@@ -180,6 +190,44 @@ exports.getSettings = async (req, res) => {
   const settings = {};
   rows.forEach(r => { settings[r.key] = r.value; });
   res.render('admin/settings', { title: 'Site Settings', settings, success: req.flash('success') });
+};
+
+exports.getChatUnreadCount = async (req, res) => {
+  const row = await queryOne("SELECT COUNT(*) as c FROM chat_messages WHERE sender='user' AND is_read=0");
+  res.json({ count: Number(row ? row.c : 0) });
+};
+
+exports.getChats = async (req, res) => {
+  const threads = await query(`
+    SELECT u.id, u.full_name, u.email,
+           COUNT(CASE WHEN cm.sender='user' AND cm.is_read=0 THEN 1 END) as unread,
+           MAX(cm.created_at) as last_at,
+           (SELECT message FROM chat_messages WHERE user_id=u.id ORDER BY created_at DESC LIMIT 1) as last_message
+    FROM chat_messages cm
+    JOIN users u ON cm.user_id = u.id
+    GROUP BY u.id
+    ORDER BY last_at DESC
+  `);
+  res.render('admin/chats', { title: 'Support Chats', threads, success: req.flash('success'), helpers: { dateStr } });
+};
+
+exports.getChatThread = async (req, res) => {
+  const user = await queryOne('SELECT * FROM users WHERE id = ? AND is_admin = 0', [req.params.userId]);
+  if (!user) { req.flash('error', 'User not found.'); return res.redirect('/admin/chats'); }
+  const messages = await query('SELECT * FROM chat_messages WHERE user_id = ? ORDER BY created_at ASC', [user.id]);
+  await run("UPDATE chat_messages SET is_read = 1 WHERE user_id = ? AND sender = 'user'", [user.id]);
+  res.render('admin/chat-thread', { title: `Chat: ${user.full_name}`, user, messages, success: req.flash('success'), errors: req.flash('error'), helpers: { dateStr } });
+};
+
+exports.postChatReply = async (req, res) => {
+  const { message } = req.body;
+  const userId = req.params.userId;
+  const user = await queryOne('SELECT * FROM users WHERE id = ? AND is_admin = 0', [userId]);
+  if (!user || !message || !message.trim()) { req.flash('error', 'Invalid request.'); return res.redirect('/admin/chats'); }
+  await run('INSERT INTO chat_messages (user_id, sender, message) VALUES (?, ?, ?)', [userId, 'admin', message.trim()]);
+  mailer.sendChatReply(user.email, user.full_name, message.trim()).catch(() => {});
+  req.flash('success', 'Reply sent.');
+  res.redirect(`/admin/chats/${userId}`);
 };
 
 exports.postSettings = async (req, res) => {

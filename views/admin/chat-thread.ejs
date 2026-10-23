@@ -1,0 +1,73 @@
+<% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
+<% if (errors && errors.length) { %><div class="a-alert a-alert-error"><%= errors[0] %></div><% } %>
+
+<div style="margin-bottom:16px;">
+  <a href="/admin/chats" class="btn btn-outline btn-sm">← Back to Chats</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start;">
+  <!-- Chat thread -->
+  <div class="a-card" style="padding:0;overflow:hidden;">
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-weight:600;"><%= user.full_name %></div>
+        <div style="font-size:.75rem;color:var(--text-muted);"><%= user.email %></div>
+      </div>
+      <a href="/admin/users/<%= user.id %>" class="btn btn-outline btn-sm">View Profile</a>
+    </div>
+
+    <div id="chat-thread" style="padding:20px;max-height:500px;overflow-y:auto;display:flex;flex-direction:column;gap:12px;">
+      <% if (!messages.length) { %>
+      <p style="text-align:center;color:var(--text-muted);padding:40px 0;">No messages yet.</p>
+      <% } %>
+      <% messages.forEach(m => { %>
+      <div style="display:flex;flex-direction:column;align-items:<%= m.sender === 'admin' ? 'flex-end' : 'flex-start' %>;">
+        <div style="
+          max-width:75%;
+          padding:10px 14px;
+          border-radius:12px;
+          font-size:.875rem;
+          line-height:1.5;
+          background:<%= m.sender === 'admin' ? 'var(--gold)' : 'var(--bg3)' %>;
+          color:<%= m.sender === 'admin' ? '#000' : 'var(--text)' %>;
+        ">
+          <%= m.message %>
+        </div>
+        <div style="font-size:.68rem;color:var(--text-muted);margin-top:4px;">
+          <%= m.sender === 'admin' ? 'You (Admin)' : user.full_name %> · <%= helpers.dateStr(m.created_at) %>
+        </div>
+      </div>
+      <% }) %>
+    </div>
+
+    <!-- Reply form -->
+    <div style="padding:16px 20px;border-top:1px solid var(--border);">
+      <form method="POST" action="/admin/chats/<%= user.id %>/reply">
+        <div style="display:flex;gap:10px;align-items:flex-end;">
+          <textarea name="message" placeholder="Type your reply..." required
+            style="flex:1;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.875rem;font-family:inherit;resize:none;rows:3;min-height:70px;"
+            rows="3"></textarea>
+          <button type="submit" class="btn btn-gold" style="height:70px;min-width:80px;">Send</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- User info sidebar -->
+  <div class="a-card">
+    <div class="a-card-title" style="margin-bottom:14px;">User Info</div>
+    <div style="font-size:.8rem;display:flex;flex-direction:column;gap:10px;">
+      <div><span style="color:var(--text-muted);">Name:</span><br><strong><%= user.full_name %></strong></div>
+      <div><span style="color:var(--text-muted);">Email:</span><br><strong><%= user.email %></strong></div>
+      <div><span style="color:var(--text-muted);">Country:</span><br><strong><%= user.country || '—' %></strong></div>
+      <div><span style="color:var(--text-muted);">Balance:</span><br><strong style="color:var(--gold);">$<%= Number(user.balance || 0).toFixed(2) %></strong></div>
+      <div><span style="color:var(--text-muted);">KYC:</span><br><span class="badge <%= user.kyc_status === 'approved' ? 'badge-green' : user.kyc_status === 'pending' ? 'badge-gold' : 'badge-gray' %>"><%= user.kyc_status || 'none' %></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Scroll chat to bottom on load
+  const thread = document.getElementById('chat-thread');
+  if (thread) thread.scrollTop = thread.scrollHeight;
+</script>

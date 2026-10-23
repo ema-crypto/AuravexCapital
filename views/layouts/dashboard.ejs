@@ -116,16 +116,6 @@
 </div>
 
 <script src="/js/main.js"></script>
-<script>
-  document.getElementById('hamburger').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.toggle('open');
-    document.getElementById('sidebar-overlay').classList.toggle('active');
-  });
-  document.getElementById('sidebar-overlay').addEventListener('click', () => {
-    document.getElementById('sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('active');
-  });
-</script>
 
   <!-- Tawk.to live chat -->
   <% if (locals.tawktoId && tawktoId) { %>
@@ -137,6 +127,102 @@
     s0.parentNode.insertBefore(s1,s0);})();
   </script>
   <% } %>
+
+  <!-- In-site chat widget -->
+  <div id="chat-widget" style="position:fixed;bottom:96px;right:28px;z-index:9998;display:flex;flex-direction:column;align-items:flex-end;gap:0;">
+    <!-- Panel -->
+    <div id="chat-panel" hidden style="width:320px;background:#0f1629;border:1px solid #1e2a4a;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.5);overflow:hidden;margin-bottom:10px;display:flex;flex-direction:column;">
+      <div style="background:linear-gradient(135deg,#c9a227,#e0b840);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-weight:700;color:#0a0e1a;font-size:.9rem;">💬 Support Chat</span>
+        <button onclick="closeChat()" style="background:rgba(0,0,0,.15);border:none;width:24px;height:24px;border-radius:50%;cursor:pointer;color:#0a0e1a;font-size:.8rem;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+      <div id="chat-msgs" style="padding:14px;height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;font-size:.825rem;">
+        <div id="chat-empty" style="text-align:center;color:#5a6478;padding:40px 0;">Send a message and our team will reply shortly.</div>
+      </div>
+      <form id="chat-form" style="padding:10px 14px;border-top:1px solid #1e2a4a;display:flex;gap:8px;">
+        <input id="chat-input" type="text" placeholder="Type a message…" autocomplete="off"
+          style="flex:1;padding:8px 12px;background:#161e3a;border:1px solid #253158;border-radius:8px;color:#f0f2f8;font-size:.825rem;font-family:inherit;" />
+        <button type="submit" style="background:#c9a227;color:#0a0e1a;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.8rem;cursor:pointer;">Send</button>
+      </form>
+    </div>
+    <!-- Toggle button -->
+    <button id="chat-btn" onclick="toggleChat()" title="Support Chat"
+      style="width:52px;height:52px;border-radius:50%;background:#1e2a4a;border:2px solid #c9a227;color:#c9a227;font-size:1.3rem;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;position:relative;">
+      💬
+      <span id="chat-badge" hidden style="position:absolute;top:-4px;right:-4px;background:#f43f5e;color:#fff;font-size:.6rem;font-weight:700;padding:2px 5px;border-radius:10px;"></span>
+    </button>
+  </div>
+
+  <script>
+    let chatOpen = false;
+
+    function toggleChat() { chatOpen ? closeChat() : openChat(); }
+
+    function openChat() {
+      chatOpen = true;
+      document.getElementById('chat-panel').hidden = false;
+      document.getElementById('chat-badge').hidden = true;
+      loadMsgs();
+    }
+
+    function closeChat() {
+      chatOpen = false;
+      document.getElementById('chat-panel').hidden = true;
+    }
+
+    function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+    async function loadMsgs() {
+      try {
+        const r = await fetch('/api/chat');
+        if (!r.ok) return;
+        const d = await r.json();
+        const box = document.getElementById('chat-msgs');
+        const empty = document.getElementById('chat-empty');
+        if (d.messages && d.messages.length) {
+          if (empty) empty.remove();
+          const existing = new Set([...box.querySelectorAll('[data-id]')].map(el => el.dataset.id));
+          d.messages.forEach(m => {
+            if (existing.has(String(m.id))) return;
+            const div = document.createElement('div');
+            div.dataset.id = m.id;
+            div.style.cssText = `display:flex;flex-direction:column;align-items:${m.sender==='admin'?'flex-end':'flex-start'}`;
+            div.innerHTML = `
+              <div style="max-width:80%;padding:8px 12px;border-radius:10px;background:${m.sender==='admin'?'#c9a227':'#1e2a4a'};color:${m.sender==='admin'?'#0a0e1a':'#f0f2f8'};line-height:1.5;">${escHtml(m.message)}</div>
+              <div style="font-size:.65rem;color:#5a6478;margin-top:3px;">${m.sender==='admin'?'Support':'You'} · ${m.time}</div>`;
+            box.appendChild(div);
+          });
+          box.scrollTop = box.scrollHeight;
+        }
+      } catch(e) {}
+    }
+
+    document.getElementById('chat-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const input = document.getElementById('chat-input');
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = '';
+      try {
+        await fetch('/api/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message: msg }) });
+        loadMsgs();
+      } catch(e) {}
+    });
+
+    // Poll unread count
+    async function checkUnread() {
+      if (chatOpen) { loadMsgs(); return; }
+      try {
+        const r = await fetch('/api/chat/unread');
+        const d = await r.json();
+        const badge = document.getElementById('chat-badge');
+        if (d.count > 0) { badge.textContent = d.count; badge.hidden = false; }
+        else { badge.hidden = true; }
+      } catch(e) {}
+    }
+    setInterval(checkUnread, 20000);
+    checkUnread();
+  </script>
 
   <!-- WhatsApp floating button -->
   <% const whatsappNum = locals.whatsappNumber || ''; %>

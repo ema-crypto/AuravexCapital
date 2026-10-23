@@ -47,6 +47,11 @@ router.post('/dashboard/profile/password',  requireAuth, dash.postChangePassword
 // Email verification
 router.post('/dashboard/resend-verification', requireAuth, auth.postResendVerification);
 
+// Chat
+router.get('/api/chat',        requireAuth, dash.getChatMessages);
+router.post('/api/chat',       requireAuth, dash.postChatMessage);
+router.get('/api/chat/unread', requireAuth, dash.getChatUnread);
+
 // Cron
 router.get('/api/cron/earnings', cron.processEarnings);
 

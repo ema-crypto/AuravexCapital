@@ -28,6 +28,12 @@ router.post('/transactions/:txnId/confirm-deposit',requireAdmin, admin.confirmDe
 router.post('/transactions/:txnId/approve',        requireAdmin, admin.approveWithdrawal);
 router.post('/transactions/:txnId/reject',         requireAdmin, admin.rejectWithdrawal);
 
+// Chats
+router.get('/chats',                    requireAdmin, admin.getChats);
+router.get('/chats/unread-count',       requireAdmin, admin.getChatUnreadCount);
+router.get('/chats/:userId',            requireAdmin, admin.getChatThread);
+router.post('/chats/:userId/reply',     requireAdmin, admin.postChatReply);
+
 // Deposit Wallets
 router.get('/wallets',      requireAdmin, admin.getWallets);
 router.post('/wallets/:id', requireAdmin, admin.updateWallet);

@@ -148,6 +148,12 @@ exports.postWithdraw = async (req, res) => {
   );
 
   mailer.sendWithdrawalSubmitted(user.email, user.full_name, amt.toFixed(2), wallet.address, txnRef).catch(() => {});
+  mailer.notifyAdmin(
+    `📤 Withdrawal Request — $${amt.toFixed(2)} by ${user.full_name}`,
+    'New Withdrawal Request',
+    [['User', `${user.full_name} (${user.email})`], ['Amount', `$${amt.toFixed(2)}`], ['Wallet', wallet.address], ['Network', wallet.network], ['Reference', txnRef]],
+    '/admin/transactions'
+  ).catch(() => {});
 
   if (status === 'completed') {
     req.flash('success', `Withdrawal of $${amt.toFixed(2)} approved and processed automatically.`);
@@ -210,6 +216,13 @@ exports.postDepositConfirm = async (req, res) => {
     [user.id, amt, coin || 'USDT', txnRef, `Deposit via ${coin || 'crypto'}${txn_hash ? ' · Hash: ' + txn_hash : ''}`]
   );
   mailer.sendDepositPending(user.email, user.full_name, amt.toFixed(2), coin || 'Crypto', txnRef).catch(() => {});
+  const siteUrl = process.env.SITE_URL || 'https://auravex-capital.vercel.app';
+  mailer.notifyAdmin(
+    `💰 New Deposit — $${amt.toFixed(2)} ${coin || 'Crypto'} by ${user.full_name}`,
+    'New Deposit Submitted',
+    [['User', `${user.full_name} (${user.email})`], ['Amount', `$${amt.toFixed(2)}`], ['Coin', coin || 'Crypto'], ['Reference', txnRef]],
+    '/admin/transactions'
+  ).catch(() => {});
   req.flash('success', 'Deposit submitted! We will confirm and credit your balance within 30–60 minutes.');
   res.redirect('/dashboard/deposit');
 };
@@ -246,6 +259,53 @@ exports.postKyc = [
     res.redirect('/dashboard/kyc');
   },
 ];
+
+exports.getChatMessages = async (req, res) => {
+  const messages = await query(
+    'SELECT id, sender, message, created_at FROM chat_messages WHERE user_id = ? ORDER BY created_at ASC',
+    [req.session.userId]
+  );
+  await run("UPDATE chat_messages SET is_read = 1 WHERE user_id = ? AND sender = 'admin'", [req.session.userId]);
+  res.json({
+    messages: messages.map(m => ({
+      id: m.id, sender: m.sender, message: m.message,
+      time: new Date(m.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
+    }))
+  });
+};
+
+exports.getChatUnread = async (req, res) => {
+  const row = await queryOne(
+    "SELECT COUNT(*) as c FROM chat_messages WHERE user_id = ? AND sender = 'admin' AND is_read = 0",
+    [req.session.userId]
+  );
+  res.json({ count: Number(row ? row.c : 0) });
+};
+
+exports.postChatMessage = async (req, res) => {
+  const { message } = req.body;
+  if (!message || !message.trim()) return res.json({ ok: false });
+  const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
+  if (!user) return res.json({ ok: false });
+  await run('INSERT INTO chat_messages (user_id, sender, message) VALUES (?, ?, ?)', [user.id, 'user', message.trim()]);
+  const countRow = await queryOne("SELECT COUNT(*) as c FROM chat_messages WHERE user_id = ? AND sender = 'user'", [user.id]);
+  if (Number(countRow.c) === 1) {
+    mailer.notifyAdmin(
+      `💬 New Chat — ${user.full_name}`,
+      'New Support Chat Started',
+      [['User', `${user.full_name} (${user.email})`], ['Message', message.trim()]],
+      `/admin/chats/${user.id}`
+    ).catch(() => {});
+  } else {
+    mailer.notifyAdmin(
+      `💬 Chat Message — ${user.full_name}`,
+      'New Chat Message',
+      [['User', `${user.full_name} (${user.email})`], ['Message', message.trim()]],
+      `/admin/chats/${user.id}`
+    ).catch(() => {});
+  }
+  res.json({ ok: true });
+};
 
 exports.getReferrals = async (req, res) => {
   const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);

@@ -1,0 +1,42 @@
+<% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
+
+<div class="a-card">
+  <div class="a-card-header">
+    <div class="a-card-title">Support Chats (<%= threads.length %>)</div>
+  </div>
+  <% if (!threads.length) { %>
+  <p style="color:var(--text-muted);padding:32px;text-align:center;">No chat messages yet.</p>
+  <% } else { %>
+  <div class="a-table-wrap">
+    <table class="a-table">
+      <thead>
+        <tr><th>User</th><th>Last Message</th><th>Unread</th><th>Last Activity</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <% threads.forEach(t => { %>
+        <tr>
+          <td>
+            <div style="font-weight:600;font-size:.875rem;"><%= t.full_name %></div>
+            <div style="font-size:.72rem;color:var(--text-muted);"><%= t.email %></div>
+          </td>
+          <td style="font-size:.8rem;color:var(--text-muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            <%= t.last_message || '—' %>
+          </td>
+          <td>
+            <% if (Number(t.unread) > 0) { %>
+            <span class="badge badge-red"><%= t.unread %> new</span>
+            <% } else { %>
+            <span style="color:var(--text-muted);font-size:.75rem;">—</span>
+            <% } %>
+          </td>
+          <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(t.last_at) %></td>
+          <td>
+            <a href="/admin/chats/<%= t.id %>" class="btn btn-sm btn-outline">View & Reply</a>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <% } %>
+</div>
