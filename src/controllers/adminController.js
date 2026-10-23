@@ -209,8 +209,20 @@ exports.getSettings = async (req, res) => {
   const rows = await query('SELECT key, value FROM site_settings');
   const settings = {};
   rows.forEach(r => { settings[r.key] = r.value; });
-  const promoActive = settings.promo_active === '1';
-  res.render('admin/settings', { title: 'Site Settings', settings, promoActive, success: req.flash('success') });
+
+  // Lazily deactivate if timer has elapsed
+  let promoActive = settings.promo_active === '1';
+  const promoEndTime = settings.promo_end_time || '';
+  if (promoActive && promoEndTime && new Date(promoEndTime) < new Date()) {
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active','0',CURRENT_TIMESTAMP)");
+    promoActive = false;
+  }
+  const promoRemainingMs = (promoActive && promoEndTime) ? Math.max(0, new Date(promoEndTime) - Date.now()) : 0;
+
+  res.render('admin/settings', {
+    title: 'Site Settings', settings, promoActive, promoEndTime, promoRemainingMs,
+    success: req.flash('success'), errors: req.flash('error')
+  });
 };
 
 exports.getChatUnreadCount = async (req, res) => {
@@ -253,9 +265,24 @@ exports.postChatReply = async (req, res) => {
 
 exports.togglePromo = async (req, res) => {
   const current = await queryOne("SELECT value FROM site_settings WHERE key = 'promo_active'");
-  const newVal = (current && current.value === '1') ? '0' : '1';
-  await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active',?,CURRENT_TIMESTAMP)", [newVal]);
-  req.flash('success', newVal === '1' ? 'Promo is now LIVE and visible to users.' : 'Promo has been hidden from users.');
+  const isActive = current && current.value === '1';
+
+  if (isActive) {
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active','0',CURRENT_TIMESTAMP)");
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_end_time','',CURRENT_TIMESTAMP)");
+    req.flash('success', 'Promo stopped and hidden from users.');
+  } else {
+    const hours = parseFloat(req.body.hours);
+    if (!hours || hours <= 0 || isNaN(hours)) {
+      req.flash('error', 'Please enter a valid duration in hours before starting the promo.');
+      return res.redirect('/admin/settings');
+    }
+    const endTime = new Date(Date.now() + hours * 3_600_000).toISOString();
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active','1',CURRENT_TIMESTAMP)");
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_end_time',?,CURRENT_TIMESTAMP)", [endTime]);
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_hours',?,CURRENT_TIMESTAMP)", [String(hours)]);
+    req.flash('success', `🔥 Promo is live! Running for ${hours} hour${hours !== 1 ? 's' : ''}.`);
+  }
   res.redirect('/admin/settings');
 };
 

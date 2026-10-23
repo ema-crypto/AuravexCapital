@@ -25,12 +25,22 @@ exports.getDashboard = async (req, res) => {
 
 exports.getPlans = async (req, res) => {
   const promoActive = await getSetting('promo_active');
-  const planSql = promoActive === '1'
+  const promoEndTime = await getSetting('promo_end_time') || '';
+  let live = promoActive === '1';
+  if (live && promoEndTime && new Date(promoEndTime) < new Date()) {
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active','0',CURRENT_TIMESTAMP)");
+    live = false;
+  }
+  const planSql = live
     ? 'SELECT * FROM plans WHERE is_active = 1 ORDER BY sort_order'
     : 'SELECT * FROM plans WHERE is_active = 1 AND is_promo = 0 ORDER BY sort_order';
   const plans = await query(planSql);
   const user  = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
-  res.render('dashboard/plans', { title: 'Investment Plans', plans, user, helpers: { currency } });
+  res.render('dashboard/plans', {
+    title: 'Investment Plans', plans, user,
+    promoEndTime: live ? promoEndTime : null,
+    helpers: { currency }
+  });
 };
 
 exports.getInvestments = async (req, res) => {

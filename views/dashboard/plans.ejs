@@ -23,6 +23,12 @@
        style="<%= p.is_promo ? 'border-color:#ef4444;' : (i === 2 ? 'border-color:var(--gold-500);' : '') %>">
     <% if (p.is_promo) { %>
     <div class="featured-tag" style="background:#ef4444;">🔥 Limited Time</div>
+    <% if (locals.promoEndTime) { %>
+    <div class="promo-countdown" data-end="<%= promoEndTime %>"
+         style="text-align:center;padding:5px 12px;background:rgba(239,68,68,.12);border-radius:6px;margin:6px 0 4px;font-size:.78rem;color:#ef4444;font-weight:700;font-family:monospace;letter-spacing:.03em;">
+      ⏱ <span class="cd-val">--:--:--</span> remaining
+    </div>
+    <% } %>
     <% } else if (i === 2) { %>
     <div class="featured-tag">Popular</div>
     <% } %>
@@ -63,3 +69,27 @@
   </div>
   <a href="/dashboard/deposit" class="btn btn-gold">+ Top Up Balance</a>
 </div>
+
+<script>
+(function() {
+  document.querySelectorAll('.promo-countdown').forEach(function(el) {
+    var end = new Date(el.dataset.end).getTime();
+    var display = el.querySelector('.cd-val');
+    var card = el.closest('.plan-card');
+    function tick() {
+      var rem = end - Date.now();
+      if (rem <= 0) {
+        if (card) card.style.display = 'none';
+        return;
+      }
+      var h = Math.floor(rem / 3600000);
+      var m = Math.floor((rem % 3600000) / 60000);
+      var s = Math.floor((rem % 60000) / 1000);
+      display.textContent = pad(h) + ':' + pad(m) + ':' + pad(s);
+      setTimeout(tick, 1000);
+    }
+    function pad(n) { return String(n).padStart(2,'0'); }
+    tick();
+  });
+})();
+</script>

@@ -1,16 +1,27 @@
-const { query, getSetting } = require('../models/database');
+const { query, getSetting, run } = require('../models/database');
+
+async function promoStatus() {
+  const active = await getSetting('promo_active');
+  if (active !== '1') return { live: false, endTime: null };
+  const endTime = await getSetting('promo_end_time');
+  if (endTime && new Date(endTime) < new Date()) {
+    await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active','0',CURRENT_TIMESTAMP)");
+    return { live: false, endTime: null };
+  }
+  return { live: true, endTime: endTime || null };
+}
 
 async function getPlansFiltered() {
-  const promoActive = await getSetting('promo_active');
-  const sql = promoActive === '1'
+  const { live, endTime } = await promoStatus();
+  const sql = live
     ? 'SELECT * FROM plans WHERE is_active = 1 ORDER BY sort_order'
     : 'SELECT * FROM plans WHERE is_active = 1 AND is_promo = 0 ORDER BY sort_order';
-  return query(sql);
+  return { plans: await query(sql), promoEndTime: live ? endTime : null };
 }
 
 exports.getHome = async (req, res) => {
-  const plans = await getPlansFiltered();
-  res.render('public/home', { title: 'Home', plans });
+  const { plans, promoEndTime } = await getPlansFiltered();
+  res.render('public/home', { title: 'Home', plans, promoEndTime });
 };
 
 exports.getAbout = (req, res) => {
@@ -18,8 +29,8 @@ exports.getAbout = (req, res) => {
 };
 
 exports.getPlans = async (req, res) => {
-  const plans = await getPlansFiltered();
-  res.render('public/plans', { title: 'Investment Plans', plans });
+  const { plans, promoEndTime } = await getPlansFiltered();
+  res.render('public/plans', { title: 'Investment Plans', plans, promoEndTime });
 };
 
 exports.getFaq = (req, res) => {
