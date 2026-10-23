@@ -209,9 +209,12 @@
       } catch(e) {}
     });
 
-    // Poll unread count
+    // 3-second fast poll while panel is open — feels real-time
+    setInterval(() => { if (chatOpen) loadMsgs(); }, 3000);
+
+    // Slow unread-badge poll when panel is closed
     async function checkUnread() {
-      if (chatOpen) { loadMsgs(); return; }
+      if (chatOpen) return;
       try {
         const r = await fetch('/api/chat/unread');
         const d = await r.json();
@@ -220,7 +223,7 @@
         else { badge.hidden = true; }
       } catch(e) {}
     }
-    setInterval(checkUnread, 20000);
+    setInterval(checkUnread, 30000);
     checkUnread();
   </script>
 
