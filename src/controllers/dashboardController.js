@@ -14,9 +14,11 @@ exports.getDashboard = async (req, res) => {
   const activeTotal = activeInvestments.reduce((s, i) => s + Number(i.amount), 0);
   const recentTxns = await query('SELECT * FROM transactions WHERE user_id = ? ORDER BY created_at DESC LIMIT 5', [user.id]);
   const refRow = await queryOne('SELECT COUNT(*) as c FROM referrals WHERE referrer_id = ? AND level = 1', [user.id]);
+  const siteUrl = process.env.SITE_URL || 'https://auravex-capital.vercel.app';
+  const referralLink = `${siteUrl}/register?ref=${user.referral_code}`;
   res.render('dashboard/index', {
     title: 'Dashboard', user, activeInvestments, activeTotal, recentTxns,
-    totalReferrals: Number(refRow.c),
+    totalReferrals: Number(refRow.c), referralLink,
     helpers: { currency, dateStr, timeAgo }
   });
 };
@@ -173,7 +175,9 @@ exports.postAddWallet = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   const user = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
-  res.render('dashboard/profile', { title: 'Profile', user, errors: req.flash('error'), success: req.flash('success') });
+  const siteUrl = process.env.SITE_URL || 'https://auravex-capital.vercel.app';
+  const referralLink = `${siteUrl}/register?ref=${user.referral_code}`;
+  res.render('dashboard/profile', { title: 'Profile', user, referralLink, errors: req.flash('error'), success: req.flash('success') });
 };
 
 exports.postUpdateProfile = async (req, res) => {

@@ -10,8 +10,8 @@
 <div class="stats-row">
   <div class="stat-card">
     <div class="sc-icon gold">💰</div>
-    <div class="sc-val"><%= currency(user.balance) %></div>
-    <div class="sc-lbl">Available Balance</div>
+    <div class="sc-val"><%= currency(Number(user.balance) + Number(user.referral_balance)) %></div>
+    <div class="sc-lbl">Total Available</div>
   </div>
   <div class="stat-card">
     <div class="sc-icon emerald">📈</div>
@@ -135,7 +135,7 @@
     </div>
   </div>
   <div class="ref-link-row">
-    <input id="ref-link-input" type="text" class="ref-link-input" value="http://localhost:3000/register?ref=<%= user.referral_code %>" readonly>
+    <input id="ref-link-input" type="text" class="ref-link-input" value="<%= referralLink %>" readonly>
     <button id="copy-ref-link" class="btn btn-gold btn-sm">Copy Link</button>
   </div>
 </div>

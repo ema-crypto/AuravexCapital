@@ -97,7 +97,7 @@
 
     <div style="font-size:.8rem;color:var(--text-secondary);margin-bottom:8px;">Your referral link:</div>
     <div class="ref-link-row">
-      <input id="ref-link-input" type="text" class="ref-link-input" value="http://localhost:3000/register?ref=<%= user.referral_code %>" readonly>
+      <input id="ref-link-input" type="text" class="ref-link-input" value="<%= referralLink %>" readonly>
       <button id="copy-ref-link" class="btn btn-gold btn-sm">Copy Link</button>
     </div>
 

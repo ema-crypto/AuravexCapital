@@ -134,6 +134,26 @@ exports.confirmDeposit = async (req, res) => {
     await run('UPDATE users SET balance = balance + ?, total_deposited = total_deposited + ? WHERE id = ?', [txn.amount, txn.amount, txn.user_id]);
     const user = await queryOne('SELECT * FROM users WHERE id = ?', [txn.user_id]);
     if (user) mailer.sendDepositConfirmed(user.email, user.full_name, txn.amount, txn.currency || 'Crypto', txn.txn_ref || '').catch(() => {});
+
+    // 5% referral commission on first confirmed deposit only
+    if (user && user.referred_by) {
+      const prevDeposits = await queryOne(
+        "SELECT COUNT(*) as c FROM transactions WHERE user_id=? AND type='deposit' AND status='completed' AND id != ?",
+        [txn.user_id, txn.id]
+      );
+      if (Number(prevDeposits.c) === 0) {
+        const commission = Number(txn.amount) * 0.05;
+        await run('UPDATE users SET referral_balance = referral_balance + ? WHERE id = ?', [commission, user.referred_by]);
+        await run(
+          'UPDATE referrals SET commission = commission + ? WHERE referrer_id = ? AND referred_id = ? AND level = 1',
+          [commission, user.referred_by, txn.user_id]
+        );
+        await run(
+          "INSERT INTO transactions (user_id,type,amount,status,note,txn_ref) VALUES (?,'referral',?,'completed',?,?)",
+          [user.referred_by, commission, `5% referral commission from ${user.full_name}'s first deposit`, `REF-${Date.now()}`]
+        );
+      }
+    }
   }
   req.flash('success', 'Deposit confirmed and user balance updated.');
   res.redirect(req.headers.referer || '/admin/transactions');
