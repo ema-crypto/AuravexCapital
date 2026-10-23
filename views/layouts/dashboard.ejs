@@ -209,10 +209,10 @@
       } catch(e) {}
     });
 
-    // 3-second fast poll while panel is open — feels real-time
-    setInterval(() => { if (chatOpen) loadMsgs(); }, 3000);
+    // Poll messages while panel is open
+    setInterval(() => { if (chatOpen) loadMsgs(); }, 20000);
 
-    // Slow unread-badge poll when panel is closed
+    // Unread-badge poll when panel is closed
     async function checkUnread() {
       if (chatOpen) return;
       try {
