@@ -7,10 +7,12 @@ const { loadUser } = require('./src/middleware/auth');
 const { currency, percent, dateStr, timeAgo } = require('./src/helpers/format');
 const { applyLayout } = require('./src/helpers/render');
 const { getSetting } = require('./src/models/database');
+const TursoStore = require('./src/models/sessionStore');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.set('trust proxy', 1);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -20,10 +22,15 @@ app.use(express.json());
 app.use(methodOverride('_method'));
 
 app.use(session({
+  store: new TursoStore(),
   secret: process.env.SESSION_SECRET || 'auravexcapital-secret-key-2025',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
+  cookie: {
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+    secure: !!process.env.VERCEL,
+    sameSite: 'lax',
+  }
 }));
 
 app.use(flash());
