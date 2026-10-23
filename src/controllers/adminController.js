@@ -281,7 +281,19 @@ exports.togglePromo = async (req, res) => {
     await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active','1',CURRENT_TIMESTAMP)");
     await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_end_time',?,CURRENT_TIMESTAMP)", [endTime]);
     await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_hours',?,CURRENT_TIMESTAMP)", [String(hours)]);
-    req.flash('success', `🔥 Promo is live! Running for ${hours} hour${hours !== 1 ? 's' : ''}.`);
+    req.flash('success', `🔥 Promo is live! Notification emails are being sent to all users.`);
+
+    // Fire promo emails to all verified users in the background
+    (async () => {
+      try {
+        const promoPlan = await queryOne('SELECT * FROM plans WHERE is_promo = 1 AND is_active = 1 LIMIT 1');
+        if (!promoPlan) return;
+        const users = await query('SELECT email, full_name FROM users WHERE is_admin = 0 AND is_suspended = 0 AND email_verified = 1');
+        for (const u of users) {
+          mailer.sendPromoAnnouncement(u.email, u.full_name, endTime, promoPlan).catch(() => {});
+        }
+      } catch (e) { /* silent — don't crash the request */ }
+    })();
   }
   res.redirect('/admin/settings');
 };

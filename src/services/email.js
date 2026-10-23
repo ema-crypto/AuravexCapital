@@ -170,6 +170,48 @@ exports.sendWithdrawalRejected = (to, name, amount, txnRef) => sendMail({
   `),
 });
 
+exports.sendPromoAnnouncement = (to, name, endTimeIso, plan) => {
+  const end = new Date(endTimeIso);
+  const endFmt = end.toUTCString().replace(' GMT', ' UTC');
+  const totalReturn = (Number(plan.daily_percent) * Number(plan.term_days)).toFixed(0);
+  return sendMail({
+    to,
+    subject: '🔥 Flash Promo is LIVE — Limited Time Only!',
+    html: wrap(`
+      <h2 style="color:#ef4444;margin:0 0 4px;">🔥 Flash Promo Just Launched!</h2>
+      <p style="margin:0 0 20px;font-size:.95rem;color:#8892a4;">Hi ${name}, our highest-yield promo plan is now available for a <strong style="color:#ef4444;">limited time only</strong>.</p>
+
+      <div style="background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:22px;margin-bottom:20px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <span style="background:#ef4444;color:#fff;font-size:.7rem;font-weight:800;letter-spacing:.08em;padding:4px 12px;border-radius:20px;">LIMITED TIME</span>
+        </div>
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="font-size:3rem;font-weight:800;color:#ef4444;line-height:1;">${plan.daily_percent}%</div>
+          <div style="font-size:.85rem;color:#8892a4;margin-top:4px;">Daily returns · ${plan.term_days}-day term</div>
+        </div>
+        <table width="100%" style="border-collapse:separate;">
+          ${detail('Plan Name', plan.name)}
+          ${detail('Daily Return', `<span style="color:#ef4444;font-weight:700;">${plan.daily_percent}%</span>`)}
+          ${detail('Term', `${plan.term_days} Days`)}
+          ${detail('Total Return', `<span style="color:#10b981;font-weight:700;">${totalReturn}%</span>`)}
+          ${detail('Min Deposit', `$${Number(plan.min_amount).toLocaleString()}`)}
+          ${detail('Max Deposit', plan.max_amount ? `$${Number(plan.max_amount).toLocaleString()}` : 'Unlimited')}
+          ${detail('Principal', plan.deposit_returned ? '<span style="color:#10b981;">✓ Returned</span>' : 'Included in payout')}
+        </table>
+      </div>
+
+      <div style="background:#161b2e;border-radius:8px;padding:16px;margin-bottom:20px;border-left:3px solid #ef4444;">
+        <div style="font-size:.78rem;color:#8892a4;margin-bottom:4px;">⏱ Promo ends:</div>
+        <div style="font-size:1rem;font-weight:700;color:#ef4444;">${endFmt}</div>
+        <div style="font-size:.78rem;color:#5a6478;margin-top:4px;">After this time the promo plan will no longer be available.</div>
+      </div>
+
+      ${btn('Invest in Flash Promo →', `${SITE}/dashboard/plans`)}
+      <p style="margin:20px 0 0;font-size:.8rem;color:#5a6478;">Make sure your wallet is funded before the promo closes. <a href="${SITE}/dashboard/deposit" style="color:#c9a227;">Top up your balance →</a></p>
+    `),
+  });
+};
+
 exports.sendChatReply = (to, name, replyMessage) => sendMail({
   to, subject: '💬 New Reply from AuravexCapital Support',
   html: wrap(`
