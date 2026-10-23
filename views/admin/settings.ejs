@@ -1,6 +1,46 @@
 <% if (success && success.length) { %><div class="a-alert a-alert-success"><%= success[0] %></div><% } %>
 
 <div style="max-width:600px;">
+
+  <!-- Promo Toggle -->
+  <div class="a-card" style="margin-bottom:20px;border:<%= promoActive ? '2px solid #ef4444' : '1px solid var(--border)' %>;">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;">
+      <div>
+        <div class="a-card-title" style="margin-bottom:6px;">🔥 Flash Promo Plan</div>
+        <p style="font-size:.85rem;color:var(--text-muted);margin:0;">
+          <% if (promoActive) { %>
+            Promo is <strong style="color:#ef4444;">LIVE</strong> — users can see and invest in the Flash Promo plan.
+          <% } else { %>
+            Promo is <strong style="color:var(--text-muted);">OFF</strong> — Flash Promo plan is hidden from all users.
+          <% } %>
+        </p>
+      </div>
+      <form method="POST" action="/admin/settings/toggle-promo" style="margin:0;">
+        <button type="submit" style="
+          padding:10px 24px;
+          border:none;
+          border-radius:8px;
+          font-weight:700;
+          font-size:.9rem;
+          cursor:pointer;
+          white-space:nowrap;
+          background:<%= promoActive ? '#ef4444' : '#10b981' %>;
+          color:#fff;
+          box-shadow:0 2px 8px <%= promoActive ? 'rgba(239,68,68,.4)' : 'rgba(16,185,129,.4)' %>;
+        ">
+          <%= promoActive ? '⏹ Stop Promo' : '▶ Start Promo' %>
+        </button>
+      </form>
+    </div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:<%= promoActive ? '#ef4444' : '#6b7280' %>;<%= promoActive ? 'box-shadow:0 0 6px #ef4444;animation:pulse 1.5s infinite;' : '' %>"></div>
+      <span style="font-size:.8rem;color:var(--text-muted);">Status: <strong style="color:<%= promoActive ? '#ef4444' : 'var(--text-muted)' %>"><%= promoActive ? 'Active' : 'Inactive' %></strong></span>
+    </div>
+  </div>
+
+  <style>
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  </style>
   <div class="a-card">
     <div class="a-card-title" style="margin-bottom:20px;">Site Configuration</div>
     <form method="POST" action="/admin/settings">

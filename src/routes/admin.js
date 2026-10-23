@@ -39,7 +39,8 @@ router.get('/wallets',      requireAdmin, admin.getWallets);
 router.post('/wallets/:id', requireAdmin, admin.updateWallet);
 
 // Settings
-router.get('/settings',  requireAdmin, admin.getSettings);
-router.post('/settings', requireAdmin, admin.postSettings);
+router.get('/settings',              requireAdmin, admin.getSettings);
+router.post('/settings',             requireAdmin, admin.postSettings);
+router.post('/settings/toggle-promo', requireAdmin, admin.togglePromo);
 
 module.exports = router;

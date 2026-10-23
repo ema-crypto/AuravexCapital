@@ -209,7 +209,8 @@ exports.getSettings = async (req, res) => {
   const rows = await query('SELECT key, value FROM site_settings');
   const settings = {};
   rows.forEach(r => { settings[r.key] = r.value; });
-  res.render('admin/settings', { title: 'Site Settings', settings, success: req.flash('success') });
+  const promoActive = settings.promo_active === '1';
+  res.render('admin/settings', { title: 'Site Settings', settings, promoActive, success: req.flash('success') });
 };
 
 exports.getChatUnreadCount = async (req, res) => {
@@ -248,6 +249,14 @@ exports.postChatReply = async (req, res) => {
   mailer.sendChatReply(user.email, user.full_name, message.trim()).catch(() => {});
   req.flash('success', 'Reply sent.');
   res.redirect(`/admin/chats/${userId}`);
+};
+
+exports.togglePromo = async (req, res) => {
+  const current = await queryOne("SELECT value FROM site_settings WHERE key = 'promo_active'");
+  const newVal = (current && current.value === '1') ? '0' : '1';
+  await run("INSERT OR REPLACE INTO site_settings (key,value,updated_at) VALUES ('promo_active',?,CURRENT_TIMESTAMP)", [newVal]);
+  req.flash('success', newVal === '1' ? 'Promo is now LIVE and visible to users.' : 'Promo has been hidden from users.');
+  res.redirect('/admin/settings');
 };
 
 exports.postSettings = async (req, res) => {

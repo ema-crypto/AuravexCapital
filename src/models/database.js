@@ -203,6 +203,7 @@ async function _runMigrations(db) {
   }
 
   await db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES ('auto_withdrawal_limit','0')");
+  await db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES ('promo_active','0')");
   await db.execute("INSERT OR IGNORE INTO site_settings (key,value) VALUES ('tawkto_id','')");
 }
 

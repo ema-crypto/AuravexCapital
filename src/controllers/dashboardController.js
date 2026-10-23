@@ -24,7 +24,11 @@ exports.getDashboard = async (req, res) => {
 };
 
 exports.getPlans = async (req, res) => {
-  const plans = await query('SELECT * FROM plans WHERE is_active = 1 ORDER BY sort_order');
+  const promoActive = await getSetting('promo_active');
+  const planSql = promoActive === '1'
+    ? 'SELECT * FROM plans WHERE is_active = 1 ORDER BY sort_order'
+    : 'SELECT * FROM plans WHERE is_active = 1 AND is_promo = 0 ORDER BY sort_order';
+  const plans = await query(planSql);
   const user  = await queryOne('SELECT * FROM users WHERE id = ?', [req.session.userId]);
   res.render('dashboard/plans', { title: 'Investment Plans', plans, user, helpers: { currency } });
 };

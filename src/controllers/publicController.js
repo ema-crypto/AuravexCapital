@@ -1,7 +1,15 @@
-const { query } = require('../models/database');
+const { query, getSetting } = require('../models/database');
+
+async function getPlansFiltered() {
+  const promoActive = await getSetting('promo_active');
+  const sql = promoActive === '1'
+    ? 'SELECT * FROM plans WHERE is_active = 1 ORDER BY sort_order'
+    : 'SELECT * FROM plans WHERE is_active = 1 AND is_promo = 0 ORDER BY sort_order';
+  return query(sql);
+}
 
 exports.getHome = async (req, res) => {
-  const plans = await query('SELECT * FROM plans WHERE is_active = 1 ORDER BY sort_order');
+  const plans = await getPlansFiltered();
   res.render('public/home', { title: 'Home', plans });
 };
 
@@ -10,7 +18,7 @@ exports.getAbout = (req, res) => {
 };
 
 exports.getPlans = async (req, res) => {
-  const plans = await query('SELECT * FROM plans WHERE is_active = 1 ORDER BY sort_order');
+  const plans = await getPlansFiltered();
   res.render('public/plans', { title: 'Investment Plans', plans });
 };
 
