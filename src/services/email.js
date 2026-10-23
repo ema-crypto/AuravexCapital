@@ -39,7 +39,7 @@ function wrap(body) {
   </td></tr>
   <tr><td style="padding:32px;color:#e4e9f0;">${body}</td></tr>
   <tr><td style="padding:16px 32px;border-top:1px solid #1e2535;font-size:.75rem;color:#5a6478;text-align:center;">
-    © 2026 AuravexCapital &nbsp;·&nbsp; <a href="mailto:support@auravexcapital.ltd" style="color:#c9a227;">support@auravexcapital.ltd</a>
+    © 2026 AuravexCapital &nbsp;·&nbsp; <a href="mailto:${process.env.FROM_EMAIL || 'noreply@auravexcapital.ltd'}" style="color:#c9a227;">${process.env.FROM_EMAIL || 'noreply@auravexcapital.ltd'}</a>
   </td></tr>
 </table></td></tr></table></body></html>`;
 }

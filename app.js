@@ -38,9 +38,11 @@ app.use(async (req, res, next) => {
   try {
     res.locals.whatsappNumber = (await getSetting('whatsapp_number')) || '';
     res.locals.tawktoId       = (await getSetting('tawkto_id')) || '';
+    res.locals.supportEmail   = process.env.FROM_EMAIL || 'noreply@auravexcapital.ltd';
   } catch (e) {
     res.locals.whatsappNumber = '';
     res.locals.tawktoId       = '';
+    res.locals.supportEmail   = process.env.FROM_EMAIL || 'noreply@auravexcapital.ltd';
   }
   next();
 });
