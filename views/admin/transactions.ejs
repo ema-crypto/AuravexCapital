@@ -45,17 +45,23 @@
           <td style="font-size:.78rem;color:var(--text-muted);"><%= helpers.dateStr(t.created_at) %></td>
           <td>
             <% if (t.type === 'deposit' && t.status === 'pending') { %>
-            <form method="POST" action="/admin/transactions/<%= t.id %>/confirm-deposit">
-              <button class="btn btn-sm btn-success">Confirm</button>
-            </form>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <form method="POST" action="/admin/transactions/<%= t.id %>/confirm-deposit">
+                <button class="btn btn-sm btn-success">Confirm</button>
+              </form>
+              <button onclick="openEditDeposit('<%= t.id %>','<%= Number(t.amount).toFixed(2) %>')" class="btn btn-sm btn-outline">Edit</button>
+            </div>
             <% } else if (t.type === 'withdrawal' && t.status === 'pending') { %>
-            <div style="display:flex;gap:5px;">
-              <form method="POST" action="/admin/transactions/<%= t.id %>/approve">
-                <button class="btn btn-sm btn-success">Approve</button>
-              </form>
-              <form method="POST" action="/admin/transactions/<%= t.id %>/reject">
-                <button class="btn btn-sm btn-danger">Reject</button>
-              </form>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="display:flex;gap:5px;">
+                <form method="POST" action="/admin/transactions/<%= t.id %>/approve">
+                  <button class="btn btn-sm btn-success">Approve</button>
+                </form>
+                <form method="POST" action="/admin/transactions/<%= t.id %>/reject">
+                  <button class="btn btn-sm btn-danger">Reject</button>
+                </form>
+              </div>
+              <button onclick="openEditWithdrawal('<%= t.id %>','<%= Number(t.amount).toFixed(2) %>','<%= (t.wallet_address || '').replace(/'/g, '') %>')" class="btn btn-sm btn-outline">Edit</button>
             </div>
             <% } else { %>
             <span style="color:var(--text-muted);font-size:.75rem;">—</span>
@@ -70,6 +76,43 @@
     </table>
   </div>
 </div>
+
+<!-- Edit Deposit Modal -->
+<dialog id="modal-edit-deposit" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;min-width:320px;color:var(--text);">
+  <form method="POST" id="form-edit-deposit">
+    <h3 style="margin:0 0 18px;font-size:1rem;">Edit Deposit Amount</h3>
+    <div class="a-form-group">
+      <label>Amount (USD)</label>
+      <input type="number" id="edit-deposit-amount" name="amount" min="0.01" step="0.01" required
+             style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem;">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button type="submit" class="btn btn-gold">Save</button>
+      <button type="button" onclick="document.getElementById('modal-edit-deposit').close()" class="btn btn-outline">Cancel</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Edit Withdrawal Modal -->
+<dialog id="modal-edit-withdrawal" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:28px;min-width:360px;color:var(--text);">
+  <form method="POST" id="form-edit-withdrawal">
+    <h3 style="margin:0 0 18px;font-size:1rem;">Edit Withdrawal</h3>
+    <div class="a-form-group">
+      <label>Amount (USD)</label>
+      <input type="number" id="edit-wd-amount" name="amount" min="0.01" step="0.01" required
+             style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.9rem;">
+    </div>
+    <div class="a-form-group" style="margin-top:12px;">
+      <label>Wallet Address</label>
+      <input type="text" id="edit-wd-addr" name="wallet_address"
+             style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:.85rem;">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button type="submit" class="btn btn-gold">Save</button>
+      <button type="button" onclick="document.getElementById('modal-edit-withdrawal').close()" class="btn btn-outline">Cancel</button>
+    </div>
+  </form>
+</dialog>
 
 <script>
 function copyAddr(btn, addr) {
@@ -86,5 +129,20 @@ function copyAddr(btn, addr) {
     btn.textContent = 'Copied!';
     setTimeout(() => btn.textContent = 'Copy', 2000);
   });
+}
+
+function openEditDeposit(id, amount) {
+  const form = document.getElementById('form-edit-deposit');
+  form.action = '/admin/transactions/' + id + '/edit-deposit';
+  document.getElementById('edit-deposit-amount').value = amount;
+  document.getElementById('modal-edit-deposit').showModal();
+}
+
+function openEditWithdrawal(id, amount, addr) {
+  const form = document.getElementById('form-edit-withdrawal');
+  form.action = '/admin/transactions/' + id + '/edit-withdrawal';
+  document.getElementById('edit-wd-amount').value = amount;
+  document.getElementById('edit-wd-addr').value = addr;
+  document.getElementById('modal-edit-withdrawal').showModal();
 }
 </script>

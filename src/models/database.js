@@ -188,6 +188,8 @@ async function _runMigrations(db) {
 
   if (!ucols.includes('verification_token'))   await db.execute("ALTER TABLE users ADD COLUMN verification_token TEXT");
   if (!ucols.includes('verification_expires')) await db.execute("ALTER TABLE users ADD COLUMN verification_expires DATETIME");
+  if (!ucols.includes('reset_token'))   await db.execute("ALTER TABLE users ADD COLUMN reset_token TEXT");
+  if (!ucols.includes('reset_expires')) await db.execute("ALTER TABLE users ADD COLUMN reset_expires DATETIME");
 
   const pcols = (await db.execute('PRAGMA table_info(plans)')).rows.map(r => r.name);
   if (!pcols.includes('is_promo')) await db.execute("ALTER TABLE plans ADD COLUMN is_promo INTEGER DEFAULT 0");

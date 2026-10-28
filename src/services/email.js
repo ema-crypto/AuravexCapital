@@ -212,6 +212,34 @@ exports.sendPromoAnnouncement = (to, name, endTimeIso, plan) => {
   });
 };
 
+exports.sendPasswordReset = (to, name, resetUrl) => sendMail({
+  to, subject: '🔑 Reset Your AuravexCapital Password',
+  html: wrap(`
+    <h2 style="color:#c9a227;margin:0 0 12px;">Password Reset Request</h2>
+    <p style="margin:0 0 16px;">Hi ${name}, we received a request to reset your password. Click the button below to set a new one.</p>
+    <div style="background:#161b2e;border-radius:8px;padding:16px;margin-bottom:20px;border-left:3px solid #c9a227;">
+      <p style="margin:0;font-size:.85rem;color:#8892a4;">This link expires in <strong style="color:#c9a227;">1 hour</strong>. If you didn't request a password reset, you can safely ignore this email.</p>
+    </div>
+    ${btn('Reset My Password →', resetUrl)}
+    <p style="margin:20px 0 0;font-size:.8rem;color:#5a6478;">For your security, never share this link with anyone.</p>
+  `),
+});
+
+exports.sendReferralBonus = (to, name, commission, fromName) => sendMail({
+  to, subject: '🎉 You earned a referral bonus!',
+  html: wrap(`
+    <h2 style="color:#10b981;margin:0 0 12px;">Referral Bonus Credited!</h2>
+    <p style="margin:0 0 16px;">Hi ${name}, great news — you just earned a referral commission!</p>
+    <div style="background:#161b2e;border-radius:8px;padding:20px;margin-bottom:20px;border-left:3px solid #10b981;">
+      <div style="font-size:.78rem;color:#8892a4;margin-bottom:6px;">Commission earned</div>
+      <div style="font-size:2rem;font-weight:800;color:#10b981;">$${Number(commission).toFixed(2)}</div>
+      <div style="font-size:.82rem;color:#8892a4;margin-top:6px;">5% of ${fromName}'s first deposit</div>
+    </div>
+    <p style="margin:0 0 16px;font-size:.85rem;color:#8892a4;">This has been added to your referral balance and is available for withdrawal.</p>
+    ${btn('View Dashboard →', `${SITE}/dashboard`)}
+  `),
+});
+
 exports.sendChatReply = (to, name, replyMessage) => sendMail({
   to, subject: '💬 New Reply from AuravexCapital Support',
   html: wrap(`

@@ -83,9 +83,50 @@ exports.getForgotPassword = (req, res) => {
   res.render('auth/forgot-password', { title: 'Reset Password', errors: req.flash('error'), success: req.flash('success') });
 };
 
-exports.postForgotPassword = (req, res) => {
+exports.postForgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await queryOne('SELECT * FROM users WHERE email = ?', [(email || '').toLowerCase().trim()]);
+  if (user) {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    await run('UPDATE users SET reset_token = ?, reset_expires = ? WHERE id = ?', [token, expires, user.id]);
+    const siteUrl = process.env.SITE_URL || 'https://auravexcapital.ltd';
+    mailer.sendPasswordReset(user.email, user.full_name, `${siteUrl}/reset-password?token=${token}`).catch(() => {});
+  }
   req.flash('success', "If that email is registered, a reset link has been sent. Please check your inbox.");
   res.redirect('/forgot-password');
+};
+
+exports.getResetPassword = async (req, res) => {
+  const { token } = req.query;
+  if (!token) { req.flash('error', 'Invalid reset link.'); return res.redirect('/forgot-password'); }
+  const user = await queryOne('SELECT * FROM users WHERE reset_token = ?', [token]);
+  if (!user || new Date(user.reset_expires) < new Date()) {
+    req.flash('error', 'Reset link is invalid or has expired. Please request a new one.');
+    return res.redirect('/forgot-password');
+  }
+  res.render('auth/reset-password', { title: 'Set New Password', token, errors: req.flash('error') });
+};
+
+exports.postResetPassword = async (req, res) => {
+  const { token, password, password_confirm } = req.body;
+  if (!password || password.length < 8) {
+    req.flash('error', 'Password must be at least 8 characters.');
+    return res.redirect(`/reset-password?token=${token}`);
+  }
+  if (password !== password_confirm) {
+    req.flash('error', 'Passwords do not match.');
+    return res.redirect(`/reset-password?token=${token}`);
+  }
+  const user = await queryOne('SELECT * FROM users WHERE reset_token = ?', [token]);
+  if (!user || new Date(user.reset_expires) < new Date()) {
+    req.flash('error', 'Reset link is invalid or has expired. Please request a new one.');
+    return res.redirect('/forgot-password');
+  }
+  const hash = await bcrypt.hash(password, 12);
+  await run('UPDATE users SET password = ?, reset_token = NULL, reset_expires = NULL WHERE id = ?', [hash, user.id]);
+  req.flash('success', 'Password updated successfully! Please log in with your new password.');
+  res.redirect('/login');
 };
 
 exports.logout = (req, res) => {

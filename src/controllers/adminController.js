@@ -152,6 +152,8 @@ exports.confirmDeposit = async (req, res) => {
           "INSERT INTO transactions (user_id,type,amount,status,note,txn_ref) VALUES (?,'referral',?,'completed',?,?)",
           [user.referred_by, commission, `5% referral commission from ${user.full_name}'s first deposit`, `REF-${Date.now()}`]
         );
+        const referrer = await queryOne('SELECT * FROM users WHERE id = ?', [user.referred_by]);
+        if (referrer) mailer.sendReferralBonus(referrer.email, referrer.full_name, commission, user.full_name).catch(() => {});
       }
     }
   }
@@ -261,6 +263,27 @@ exports.postChatReply = async (req, res) => {
   mailer.sendChatReply(user.email, user.full_name, message.trim()).catch(() => {});
   req.flash('success', 'Reply sent.');
   res.redirect(`/admin/chats/${userId}`);
+};
+
+exports.editDeposit = async (req, res) => {
+  const txn = await queryOne("SELECT * FROM transactions WHERE id=? AND type='deposit' AND status='pending'", [req.params.txnId]);
+  if (!txn) { req.flash('error', 'Pending deposit not found.'); return res.redirect('/admin/transactions'); }
+  const amt = parseFloat(req.body.amount);
+  if (isNaN(amt) || amt <= 0) { req.flash('error', 'Invalid amount.'); return res.redirect(req.headers.referer || '/admin/transactions'); }
+  await run('UPDATE transactions SET amount=? WHERE id=?', [amt, txn.id]);
+  req.flash('success', 'Deposit amount updated.');
+  res.redirect(req.headers.referer || '/admin/transactions');
+};
+
+exports.editWithdrawal = async (req, res) => {
+  const txn = await queryOne("SELECT * FROM transactions WHERE id=? AND type='withdrawal' AND status='pending'", [req.params.txnId]);
+  if (!txn) { req.flash('error', 'Pending withdrawal not found.'); return res.redirect('/admin/transactions'); }
+  const amt = parseFloat(req.body.amount);
+  const addr = (req.body.wallet_address || '').trim();
+  if (isNaN(amt) || amt <= 0) { req.flash('error', 'Invalid amount.'); return res.redirect(req.headers.referer || '/admin/transactions'); }
+  await run('UPDATE transactions SET amount=?, wallet_address=? WHERE id=?', [amt, addr || txn.wallet_address, txn.id]);
+  req.flash('success', 'Withdrawal updated.');
+  res.redirect(req.headers.referer || '/admin/transactions');
 };
 
 exports.togglePromo = async (req, res) => {
